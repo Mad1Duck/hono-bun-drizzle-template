@@ -1,0 +1,14 @@
+{
+  "name": "@repo/user-service",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --env-file=../../.env run --hot src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/logger": "workspace:*",
+    "@repo/database": "workspace:*",
+    "hono": "^4.12.27"
+  }
+}
