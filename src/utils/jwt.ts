@@ -16,7 +16,7 @@ export const generateToken = async ({ email, id, roles }: tokenParams) => {
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 1 hari
   };
   const secret = process.env.JWT_SECRET || 'default';
-  const token = await sign(payload, secret);
+  const token = await sign(payload, secret, 'HS256');
 
   return token;
 };
@@ -32,14 +32,14 @@ export const generateRefreshToken = async ({ email, national_id, id }: tokenPara
     exp: tmpExp
   };
   const secret = process.env.JWT_SECRET || 'default';
-  const token = await sign(payload, secret);
+  const token = await sign(payload, secret, 'HS256');
 
   return { token, tmpExp };
 };
 
 export const verifyToken = async (token: string) => {
   const secret = process.env.JWT_SECRET || 'default';
-  const result = await verify(token, secret);
+  const result = await verify(token, secret, 'HS256');
 
   return result;
 };

@@ -1,10 +1,10 @@
-import { db } from '../db'; // Drizzle client instance
-import { users, userRoles, organizationUsers, userRoles as rolesTable, CreateUserInput, userTokens } from '../db/schema'; // import schema Drizzle
-import { eq, or } from 'drizzle-orm';
-import { bcryptHash } from '@/utils/hashing';
+import { db } from '@/db';
+import { users, authTokens, CreateUserInput } from '../schema/auth.schema';
+import { userRoles } from '@/modules/rbac/schema/rbac.schema';
+import { and, eq, or } from 'drizzle-orm';
+import { bcryptHash, sha256Hash } from '@/utils/hashing';
 import { transformPhoneNumber } from '@/utils/formater';
 
-// GET all users (superadmin & owner users)
 export async function getUsers() {
   return await db.select({
     id: users.id,
@@ -17,11 +17,9 @@ export async function getUsers() {
   }).from(users);
 }
 
-// GET user by email or phone + include roles
 export async function getUser({ email, phone }: { email: string; phone: string; }) {
   const phoneFormatted = await transformPhoneNumber(phone);
 
-  // join users and organizationUsers + userRoles to get roles names
   const user = await db
     .select({
       id: users.id,
@@ -31,13 +29,12 @@ export async function getUser({ email, phone }: { email: string; phone: string; 
       phone: users.phone,
       username: users.username,
       createdAt: users.createdAt,
-      roles: rolesTable.name,
+      roles: userRoles.name,
       password: users.password
 
     })
     .from(users)
-    .leftJoin(organizationUsers, eq(users.id, organizationUsers.userId))
-    .leftJoin(userRoles, eq(organizationUsers.roleId, userRoles.id))
+    .leftJoin(userRoles, eq(users.roleId, userRoles.id))
     .where(
       or(
         eq(users.email, email.toLowerCase()),
@@ -49,10 +46,8 @@ export async function getUser({ email, phone }: { email: string; phone: string; 
   return user.length ? user[0] : null;
 }
 
-// CREATE user + assign default USER role (as transaction)
 export async function createUser(data: CreateUserInput) {
   return await db.transaction(async (tx) => {
-    // Cari role 'USER' di userRoles (id tipe integer)
     const [role] = await tx
       .select()
       .from(userRoles)
@@ -61,11 +56,9 @@ export async function createUser(data: CreateUserInput) {
 
     if (!role) throw new Error("Role 'USER' tidak ditemukan");
 
-    // Hash password dan format phone
     const passwordHashed = await bcryptHash(data.password);
     const phoneFormatted = await transformPhoneNumber(data.phone);
 
-    // Buat user baru
     const [user] = await tx
       .insert(users)
       .values({
@@ -76,31 +69,14 @@ export async function createUser(data: CreateUserInput) {
         phone: phoneFormatted,
         username: data.username,
         isPlatformOwner: data.isPlatformOwner ?? false,
+        roleId: data.isPlatformOwner ? null : role.id,
       })
       .returning();
-
-    // Jika user adalah platform owner (superadmin), biasanya tidak join organisasi,
-    // jadi skip buat organisasiUsers relation.
-    // Kalau user biasa, bisa ditambahkan logic join organisasi setelah ini.
-
-    if (!data.isPlatformOwner) {
-      // Misal organizationId harus ada, sesuaikan dengan organisasi user bergabung
-      // Contoh organizationId dummy: 'uuid-of-organization'
-      const organizationId = 'uuid-of-organization'; // Ganti sesuai organisasi user
-
-      await tx.insert(organizationUsers).values({
-        userId: user.id,
-        organizationId: organizationId,
-        roleId: role.id,
-        isOwner: false,
-      });
-    }
 
     return user;
   });
 }
 
-// GET user by ID + include roles
 export async function getUserById(id: string) {
   const user = await db
     .select({
@@ -111,11 +87,10 @@ export async function getUserById(id: string) {
       phone: users.phone,
       username: users.username,
       createdAt: users.createdAt,
-      roles: rolesTable.name,
+      roles: userRoles.name,
     })
     .from(users)
-    .leftJoin(organizationUsers, eq(users.id, organizationUsers.userId))
-    .leftJoin(userRoles, eq(organizationUsers.roleId, userRoles.id))
+    .leftJoin(userRoles, eq(users.roleId, userRoles.id))
     .where(eq(users.id, id))
     .limit(1);
 
@@ -124,9 +99,9 @@ export async function getUserById(id: string) {
 
 
 export async function saveRefreshToken(userId: string, token: string, expiresAt: Date) {
-  const [inserted] = await db.insert(userTokens).values({
+  const [inserted] = await db.insert(authTokens).values({
     userId: userId,
-    token,
+    token: sha256Hash(token),
     type: 'refresh_token',
     createdAt: new Date(),
     expiresAt: expiresAt
@@ -136,20 +111,45 @@ export async function saveRefreshToken(userId: string, token: string, expiresAt:
 }
 
 
-export async function verifyRefreshToken(token: string) {
-  const result = await db
-    .select()
-    .from(userTokens)
-    .where(eq(userTokens.token, token))
-    .limit(1);
+// Rotasi refresh token: nonaktifkan token lama (kalau masih aktif) dan simpan token baru dalam satu transaksi.
+// Return null kalau token lama sudah tidak aktif (sudah dipakai sebelumnya / direvoke) -> indikasi reuse/replay.
+export async function rotateRefreshToken({
+  oldToken,
+  userId,
+  newToken,
+  expiresAt,
+}: { oldToken: string; userId: string; newToken: string; expiresAt: Date; }) {
+  return await db.transaction(async (tx) => {
+    const [deactivated] = await tx
+      .update(authTokens)
+      .set({ isActive: false, usedAt: new Date() })
+      .where(
+        and(
+          eq(authTokens.token, sha256Hash(oldToken)),
+          eq(authTokens.isActive, true),
+        ),
+      )
+      .returning();
 
-  if (result.length) {
-    return result[0];
-  } else {
-    return null;
-  }
+    if (!deactivated) return null;
+
+    const [inserted] = await tx
+      .insert(authTokens)
+      .values({
+        userId,
+        token: sha256Hash(newToken),
+        type: 'refresh_token',
+        expiresAt,
+      })
+      .returning();
+
+    return inserted;
+  });
 }
 
 export async function revokeRefreshToken(token: string) {
-  return await db.delete(userTokens).where(eq(userTokens.token, token));
+  return await db
+    .update(authTokens)
+    .set({ isActive: false, usedAt: new Date() })
+    .where(eq(authTokens.token, sha256Hash(token)));
 }

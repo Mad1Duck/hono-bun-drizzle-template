@@ -1,7 +1,8 @@
 import { Context, Next } from 'hono';
-import { ZodError, ZodSchema } from 'zod';
+import { z, ZodError, ZodType } from 'zod';
+import { failureFromCode } from '@/utils/apiResponse';
 
-export const validate = (schema: ZodSchema) => {
+export const validate = (schema: ZodType) => {
   return async (c: Context, next: Next) => {
     try {
       const body = await c.req.parseBody();
@@ -11,15 +12,13 @@ export const validate = (schema: ZodSchema) => {
     } catch (error) {
 
       if (error instanceof SyntaxError) {
-        return c.json({ error: 'Invalid JSON format' }, 400);
+        return failureFromCode(c, 'INVALID_JSON');
       } else if (error instanceof ZodError) {
-        return c.json({
-          error: 'Validation failed', details: error.errors.map(({ message, path, ...a }) => {
-            return ({ message, path });
-          })
-        }, 400);
+        const { fieldErrors } = z.flattenError(error);
+
+        return failureFromCode(c, 'VALIDATION_ERROR', { fields: fieldErrors });
       } else {
-        return c.json({ error: 'Server error' }, 500);
+        return failureFromCode(c, 'INTERNAL_ERROR');
       }
     }
   };

@@ -1,9 +1,9 @@
 import { catchAsync } from "@/utils/catchAsync";
-import *  as httpStatus from "http-status";
+import { success, failureFromCode } from "@/utils/apiResponse";
 import { join } from "path";
 import { writeFile } from "fs/promises";
 import { utapi } from "@/utils/uploadthing";
-import { toWebp } from "@/services/image.service";
+import { toWebp } from "../service/image.service";
 import { fileUtils } from "@/utils/fileUtils";
 
 export const upload = catchAsync(async (c) => {
@@ -20,11 +20,10 @@ export const upload = catchAsync(async (c) => {
 
     await writeFile(filepath, Buffer.from(convertedBuffer));
 
-    return c.json({ data: filepath, file: originalName });
+    return success(c, { filepath, file: originalName }, { message: "File uploaded successfully" });
   }
 
-  return c.json({ data: {}, message: httpStatus.default["415_MESSAGE"] });
-
+  return failureFromCode(c, 'UNSUPPORTED_MEDIA_TYPE');
 });
 
 
@@ -34,7 +33,6 @@ export const uploadThing = catchAsync(async (c) => {
   if (file instanceof File) {
     const buffer = await file?.arrayBuffer();
 
-    // convert to webp
     const { convertedBuffer, type } = await toWebp({ file: buffer });
     const { originalName } = fileUtils(file);
     const newFilename = `${originalName}.${type?.ext}`;
@@ -45,10 +43,8 @@ export const uploadThing = catchAsync(async (c) => {
 
     const response = await utapi.uploadFiles([fileWithNewName]);
 
-
-    return c.json({ data: response });
+    return success(c, response, { message: "File uploaded successfully" });
   }
-  return c.json({ data: {}, message: httpStatus.default["415_MESSAGE"] });
 
+  return failureFromCode(c, 'UNSUPPORTED_MEDIA_TYPE');
 });
-

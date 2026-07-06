@@ -1,6 +1,6 @@
 
 import { Hono } from 'hono';
-import { uploadThing } from '@/controllers/storage/file.controller';
+import { uploadThing } from '../controller/storage.controller';
 
 const app = new Hono()
     .post('/upload', uploadThing);

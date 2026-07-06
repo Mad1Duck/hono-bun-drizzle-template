@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "module": "ESNext",
     "target": "ESNext",
     "esModuleInterop": true,
-    "baseUrl": "./",
+    "skipLibCheck": true,
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     }
   }

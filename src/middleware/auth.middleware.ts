@@ -1,36 +1,34 @@
 import { jwt } from "hono/jwt";
 import { catchAsync } from "@/utils/catchAsync";
-import { getUserById } from "@/services/auth.service";
-import { isEmpty } from "lodash";
+import { getUserById } from "@/modules/auth/service/auth.service";
 import ApiError from "@/utils/ApiError";
-import * as HttpStatus from "http-status";
 import * as _ from 'lodash';
 
-export const authentication = jwt({ secret: process.env.JWT_SECRET || 'default', });
+export const authentication = jwt({ secret: process.env.JWT_SECRET || 'default', alg: 'HS256' });
 
 export const authenticationStoreOwner = catchAsync(async (c, next) => {
-  const { id } = c.get("jwtPayload");
+  const { id } = c.get("jwtPayload") as { id: string; };
   return await next();
 });
 
 export const authenticationUser = catchAsync(async (c, next) => {
-  const { id } = c.get("jwtPayload");
+  const { id } = c.get("jwtPayload") as { id: string; };
   const findUser = await getUserById(id);
 
-  if (!isEmpty(findUser) && (_.find(findUser?.roles, (item) => item === "Admin"))) {
+  if (findUser && _.find(findUser.roles, (item) => item === "Admin")) {
     return await next();
   } else {
-    throw new ApiError(HttpStatus.default.UNAUTHORIZED, { message: "unauthorize" });
+    throw new ApiError('FORBIDDEN');
   }
 });
 
 export const authenticationAdministrator = catchAsync(async (c, next) => {
-  const { id } = c.get("jwtPayload");
+  const { id } = c.get("jwtPayload") as { id: string; };
   const findUser = await getUserById(id);
 
-  if (!isEmpty(findUser) && (_.find(findUser?.roles, (item) => item === "Owner"))) {
+  if (findUser && _.find(findUser.roles, (item) => item === "Owner")) {
     return await next();
   } else {
-    throw new ApiError(HttpStatus.default.UNAUTHORIZED, { message: "unauthorize" });
+    throw new ApiError('FORBIDDEN');
   }
 });

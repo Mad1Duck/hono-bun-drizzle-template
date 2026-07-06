@@ -1,8 +1,11 @@
-import { ConnectionOptions } from 'bullmq';
-
-export const redisConfig: ConnectionOptions = {
+export const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
+};
+
+export const loginRateLimitConfig = {
+  maxAttempts: parseInt(process.env.LOGIN_RATE_LIMIT_MAX_ATTEMPTS || '5', 10),
+  windowSeconds: parseInt(process.env.LOGIN_RATE_LIMIT_WINDOW_SECONDS || '900', 10), // 15 menit
 };
 
 export const emailConfig = {
