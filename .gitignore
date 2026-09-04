@@ -4,8 +4,6 @@ public/
 
 # Documentation and local notes (kept in workspace, ignored by git)
 docs/
-docs-a/
-docs-t/
 
 # Environment variables
 .env
