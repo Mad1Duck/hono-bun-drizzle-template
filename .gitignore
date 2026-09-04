@@ -3,7 +3,7 @@ node_modules/
 public/
 
 # Documentation and local notes (kept in workspace, ignored by git)
-docs/
+# docs/
 
 # Environment variables
 .env
