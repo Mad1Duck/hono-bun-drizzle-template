@@ -11,10 +11,10 @@ export const upload = catchAsync(async (c) => {
 
   if (file instanceof File) {
     const buffer = await file?.arrayBuffer();
-    const { convertedBuffer, type } = await toWebp({ file: buffer });
+    const { convertedBuffer, ext } = await toWebp({ file: buffer });
     const { originalName } = fileUtils(file);
 
-    const newFilename = `${originalName}.${type?.ext}`;
+    const newFilename = `${originalName}.${ext}`;
     const filepath = join(publicPath, newFilename);
 
     await writeFile(filepath, Buffer.from(convertedBuffer));
@@ -32,12 +32,12 @@ export const uploadThing = catchAsync(async (c) => {
   if (file instanceof File) {
     const buffer = await file?.arrayBuffer();
 
-    const { convertedBuffer, type } = await toWebp({ file: buffer });
+    const { convertedBuffer, mime, ext } = await toWebp({ file: buffer });
     const { originalName } = fileUtils(file);
-    const newFilename = `${originalName}.${type?.ext}`;
+    const newFilename = `${originalName}.${ext}`;
 
     const fileWithNewName = new File([convertedBuffer], newFilename, {
-      type: type?.mime,
+      type: mime,
     });
 
     const response = await utapi.uploadFiles([fileWithNewName]);

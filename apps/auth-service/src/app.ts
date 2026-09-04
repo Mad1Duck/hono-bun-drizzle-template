@@ -10,8 +10,22 @@ const app = new Hono()
   .use(logger())
   .use('/public/*', async (c) => {
     const publicPath = join(process.cwd(), 'public');
-    const filePath = join(publicPath, c.req.path.replace('/public/', ''));
-    return new Response(Bun.file(filePath));
+    const raw = c.req.path.replace('/public/', '');
+    const relative = decodeURIComponent(raw);
+
+    if (!relative || relative.split(/[\\/]/).some((s) => s === '..')) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
+    const filePath = join(publicPath, relative);
+    const file = Bun.file(filePath);
+
+    if (!(await file.exists())) {
+      return new Response('Not found', { status: 404 });
+    }
+
+    c.header('Content-Type', file.type);
+    return new Response(file);
   })
   .use('/file-data/*', serveStatic({
     root: './public',
