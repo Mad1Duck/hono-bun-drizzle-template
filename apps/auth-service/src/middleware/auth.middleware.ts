@@ -6,14 +6,20 @@ export const authentication = jwt({ secret: process.env.JWT_SECRET || 'default',
 
 export const authenticationStoreOwner = catchAsync(async (c, next) => {
   const { id } = c.get("jwtPayload") as { id: string; };
-  return await next();
+  const findUser = await getUserById(id);
+
+  if (findUser && findUser.roles === "Owner") {
+    return await next();
+  } else {
+    throw new ApiError('FORBIDDEN');
+  }
 });
 
 export const authenticationUser = catchAsync(async (c, next) => {
   const { id } = c.get("jwtPayload") as { id: string; };
   const findUser = await getUserById(id);
 
-  if (findUser && findUser.roles === "Admin") {
+  if (findUser && findUser.roles === "USER") {
     return await next();
   } else {
     throw new ApiError('FORBIDDEN');
@@ -24,7 +30,7 @@ export const authenticationAdministrator = catchAsync(async (c, next) => {
   const { id } = c.get("jwtPayload") as { id: string; };
   const findUser = await getUserById(id);
 
-  if (findUser && findUser.roles === "Owner") {
+  if (findUser && findUser.roles === "Admin") {
     return await next();
   } else {
     throw new ApiError('FORBIDDEN');
