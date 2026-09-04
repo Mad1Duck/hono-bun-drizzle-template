@@ -5,5 +5,8 @@ export * from './errorHandler';
 export * from './rateLimiter';
 export * from './constants/api-version';
 export * from './constants/errors';
+export * from './constants/topics';
 export * from './types/api-response';
 export * from './types/stream';
+export * from './stream/codec';
+export * from './stream/connector';

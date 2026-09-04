@@ -10,6 +10,7 @@ import { API_VERSION } from '@repo/shared';
 import { errorHandler } from './middleware/error-handler';
 import { notFound } from './middleware/not-found';
 import routes from './routes';
+import stream from './stream/handler';
 
 // Urutan: RequestID -> Logger -> Security -> CORS -> Compression -> Timeout -> Rate Limit -> (JWT per-route) -> Proxy
 const app = new Hono()
@@ -21,6 +22,7 @@ const app = new Hono()
   .use(requestTimeout)
   .use(rateLimit)
   .route(`/${API_VERSION}`, routes)
+  .route('/', stream)
   .notFound(notFound)
   .onError(errorHandler);
 

@@ -1,6 +1,6 @@
 import { ServerWebSocket } from 'bun';
 import { createBunWebSocket } from 'hono/bun';
-import { API_VERSION, versionedTopic, parseVersionedTopic } from '@repo/shared';
+import { encode, decode, versionedTopic, parseVersionedTopic } from '@repo/shared';
 
 const { websocket, upgradeWebSocket } = createBunWebSocket();
 
@@ -33,17 +33,13 @@ export const wsHandler = upgradeWebSocket((c) => {
 
       if (!channels) return;
 
-      const payload = evt.data.toString();
-      console.log(`Received message on '${topic}': ${payload}`);
+      const parsed = decode<unknown>(evt.data as string | ArrayBuffer);
+      console.log(`Received message on '${topic}':`, parsed);
+
+      const response = JSON.stringify(encode(parsed.topic, parsed.payload));
 
       for (const subscribedChannel of channels) {
-        const envelope = JSON.stringify({
-          version: API_VERSION,
-          topic: parseVersionedTopic(subscribedChannel),
-          payload,
-          timestamp: Date.now(),
-        });
-        rawWs.publish(subscribedChannel, envelope);
+        rawWs.publish(subscribedChannel, response);
       }
     },
     onClose(_, ws) {
@@ -62,14 +58,9 @@ export const wsHandler = upgradeWebSocket((c) => {
   };
 });
 
-export const broadcastToTopic = (topic: string, message: string) => {
+export const broadcastToTopic = (topic: string, message: unknown) => {
   const channel = versionedTopic(topic);
-  const envelope = JSON.stringify({
-    version: API_VERSION,
-    topic,
-    payload: message,
-    timestamp: Date.now(),
-  });
+  const envelope = JSON.stringify(encode(topic, message));
 
   console.log(`Broadcasting to channel '${channel}': ${envelope}`);
 

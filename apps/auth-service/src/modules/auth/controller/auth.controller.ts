@@ -10,7 +10,7 @@ import * as HttpStatus from "http-status";
 const dummyPasswordHash = bcryptHash("dummy-password-for-timing-safety");
 
 export const register = catchAsync(async (c) => {
-  const { email, firstName, lastName, password, phone, username }: registerSchemaType = await c.req.parseBody();
+  const { email, firstName, lastName, password, phone, username } = c.get('parsedData') as registerSchemaType;
 
   const result = await createUser({
     email,
@@ -25,7 +25,7 @@ export const register = catchAsync(async (c) => {
 });
 
 export const login = catchAsync(async (c) => {
-  const { password, username }: loginSchemaType = await c.req.parseBody();
+  const { password, username } = c.get('parsedData') as loginSchemaType;
 
   const rateLimitKey = `login:${username.toLowerCase()}`;
   const { allowed } = await checkRateLimit({
@@ -76,7 +76,7 @@ export const login = catchAsync(async (c) => {
 });
 
 export const refreshToken = catchAsync(async (c) => {
-  const { refreshToken }: refreshTokenSchemaType = await c.req.parseBody();
+  const { refreshToken } = c.get('parsedData') as refreshTokenSchemaType;
 
   if (!refreshToken) {
     throw new ApiError('REFRESH_TOKEN_REQUIRED');
@@ -114,7 +114,7 @@ export const refreshToken = catchAsync(async (c) => {
 });
 
 export const logout = catchAsync(async (c) => {
-  const { refreshToken }: refreshTokenSchemaType = await c.req.parseBody();
+  const { refreshToken } = c.get('parsedData') as refreshTokenSchemaType;
 
   if (!refreshToken) {
     throw new ApiError('REFRESH_TOKEN_REQUIRED');

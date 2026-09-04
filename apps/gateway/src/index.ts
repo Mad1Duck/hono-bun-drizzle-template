@@ -1,10 +1,12 @@
 import { app } from './app';
 import { env } from './config/env';
 import { logger } from '@repo/logger';
+import { websocket } from './stream/connector/ws.connector';
 
 const server = Bun.serve({
   port: env.PORT,
   fetch: app.fetch,
+  websocket,
 });
 
 logger.info(`gateway listening on http://localhost:${env.PORT}`);

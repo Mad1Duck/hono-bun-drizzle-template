@@ -1,10 +1,12 @@
 import { type ApiVersion, API_VERSION } from "../constants/api-version";
+import type { Topic } from "../constants/topics";
 
 export type VersionedEvent<T = unknown> = {
   version: ApiVersion;
-  topic: string;
+  topic: Topic;
   payload: T;
   timestamp: number;
+  meta?: unknown;
 };
 
 export type WsEvent<T = unknown> = VersionedEvent<T>;
@@ -19,8 +21,8 @@ export type EventEnvelope<T = unknown> =
   | { transport: "sse"; payload: SseEvent<T> };
 
 export type BroadcastFn<T = unknown> = (
-  topic: string,
-  payload: T
+  topic: Topic,
+  message: WsEvent<T> | SseEvent<T>
 ) => void;
 
 export const versionedTopic = (topic: string): string => `${API_VERSION}:${topic}`;
