@@ -6,6 +6,7 @@ import { corsMiddleware } from './middleware/cors';
 import { compression } from './middleware/compression';
 import { requestTimeout } from './middleware/timeout';
 import { rateLimit } from './middleware/rate-limit';
+import { API_VERSION } from '@repo/shared';
 import { errorHandler } from './middleware/error-handler';
 import { notFound } from './middleware/not-found';
 import routes from './routes';
@@ -19,7 +20,7 @@ const app = new Hono()
   .use(compression)
   .use(requestTimeout)
   .use(rateLimit)
-  .route('/', routes)
+  .route(`/${API_VERSION}`, routes)
   .notFound(notFound)
   .onError(errorHandler);
 

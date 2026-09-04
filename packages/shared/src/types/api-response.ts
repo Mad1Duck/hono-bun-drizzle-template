@@ -1,7 +1,10 @@
+import { type ApiVersion, API_VERSION } from "../constants/api-version";
+
 export type Meta = {
   code: number;
   status: "SUCCESS" | "ERROR";
   message?: string;
+  version: ApiVersion;
 };
 
 export type ApiSuccessResponse<T> = {
@@ -10,6 +13,7 @@ export type ApiSuccessResponse<T> = {
   meta: Meta & {
     status: "SUCCESS";
     message: string;
+    version: ApiVersion;
   };
 };
 

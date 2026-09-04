@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import type { ApiSuccessResponse, ApiErrorResponse, ErrorContract } from "./types/api-response";
+import { API_VERSION } from "./constants/api-version";
 import { ErrorCode, resolveError } from "./constants/errors";
 
 export const success = <T>(
@@ -16,6 +17,7 @@ export const success = <T>(
       code,
       status: "SUCCESS",
       message: options?.message ?? "Success",
+      version: API_VERSION,
     },
   };
 
@@ -33,6 +35,7 @@ export const failure = (
     meta: {
       code: statusCode,
       status: "ERROR",
+      version: API_VERSION,
     },
   };
 

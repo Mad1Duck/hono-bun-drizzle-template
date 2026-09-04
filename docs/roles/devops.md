@@ -18,4 +18,10 @@ Kamu bertanggung jawab atas build, deployment, CI/CD, container, environment, da
 - CI/CD harus menjalankan type check, test, lint, dan build sebelum merge/deploy.
 - Migrasi DB (`drizzle-kit migrate`) harus dijalankan di environment target sebelum deploy.
 - Secret management harus terpisah dari kode (vault/env), jangan hardcode.
+- Pastikan Redis & queue (BullMQ) siap di environment target untuk rate limit dan job processing.
+- Setup observability/logging dapat menangkap error worker tanpa bocorkan secret.
+- Setiap service wajib expose `/health` dan `/ready`; monitoring dasar harus tersedia.
+- CI/CD harus menjalankan unit, integration, dan E2E test; hasil test wajib lulus sebelum deploy.
+- Setup backup & restore DB otomatis dan periodik; dokumentasikan rollback procedure.
+- Gunakan environment-based versioning/canary/blue-green untuk deploy yang aman.
 - Build/test harus bisa dijalankan dengan perintah CI yang terstandarisasi.

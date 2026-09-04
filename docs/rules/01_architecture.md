@@ -72,13 +72,118 @@
 - `.env.example` must stay in sync with code that reads environment variables.
 - Update `CHANGELOG.md` (or equivalent) for user-facing changes.
 
+## Error Handling & Logging
+
+- Use the centralized `ApiError` / `ApiResponse` contract for all HTTP responses.
+- Do not leak internal stack traces or sensitive details to the client; log them internally.
+- Use structured logging (`pino`) with request/context IDs; avoid logging secrets, tokens, and PII.
+- Errors must be observable: log to console and optionally to `app_logs`/observability sink.
+- Log levels: `INFO` for business actions, `WARN` for recoverable issues, `ERROR` for failures that need attention.
+
+## Database Transactions & Concurrency
+
+- Use Drizzle ORM transactions for multi-step writes that must be atomic.
+- Avoid `read → modify → write` patterns without a row-level lock or idempotency key when concurrent requests can modify the same row.
+- Use `for update` or appropriate locks when checking state before acting.
+- Make migration files idempotent and reversible where possible.
+- Operations should be idempotent when retried (duplicate API calls, job retries).
+
+## Queue / Job Conventions (BullMQ)
+
+- Jobs must be idempotent: processing the same job twice should not corrupt data.
+- Validate job payload before processing.
+- Configure retries with exponential back-off and a dead-letter queue for persistent failures.
+- Workers should log start/finish/failure and not swallow errors.
+
+## Rate Limiting & Timeouts
+
+- Apply rate limiting per user/IP/route; fail-open if Redis is unavailable unless security-critical.
+- Set sensible timeouts on external HTTP calls and long-running operations.
+- Add circuit breaker pattern for unreliable external services if possible.
+
+## API Versioning & Backward Compatibility
+
+- Prefer path/header versioning for breaking changes.
+- Do not remove or rename response fields without deprecation period; keep old clients working.
+- Document breaking changes in `CHANGELOG.md` and migration guide if needed.
+
+## Pagination, Sorting & Filtering
+
+- List endpoints must support pagination: `offset`/`limit` or `cursor` based.
+- Standard query params: `sort`, `order`, `search`, and `filter[<field>]=<value>`.
+- Always return list response with `data`, `meta`, and pagination info.
+
+## Dependency & Package Boundaries
+
+- Add dependencies only when necessary; prefer existing packages.
+- Do not cross-import between `apps/*` packages; shared code goes to `packages/core` or `packages/<shared>`.
+- Avoid circular dependencies.
+- Keep `peerDependencies` and workspace protocol consistent in a monorepo.
+
+## Observability & Health Checks
+
+- Expose `/health` (liveness) and `/ready` (readiness) endpoints in every service.
+- Include request/context IDs in logs and responses for traceability.
+- Use structured logging (`pino`) and aggregate logs to an observable sink.
+- Track key metrics: request latency, error rate, queue depth, DB connection pool, active WebSocket connections.
+- Implement graceful shutdown: close HTTP server, DB/Redis/BullMQ connections, and flush logs on `SIGTERM`/`SIGINT`.
+
+## Testing Strategy
+
+- Prefer unit tests for pure logic and services; mock DB/Redis/external HTTP.
+- Use integration tests for DB/Redis interactions; reset state between tests.
+- Use E2E tests for critical user flows; run against a real-ish environment with seeded data.
+- Factories/fixtures must be deterministic and safe to rerun.
+- Each bug fix must include a regression test.
+
+## Performance & Caching
+
+- Cache read-heavy data in Redis with a clear TTL and invalidation strategy.
+- Avoid N+1 queries; use Drizzle `with` relations or batched loaders.
+- Set pagination defaults/max limits to prevent unbounded responses.
+- Optimize hot paths; do not optimize prematurely without profiling data.
+
+## Security Middleware & Headers
+
+- Apply CORS, Helmet-like security headers, and CSP where appropriate.
+- Order middleware carefully: RequestID -> Logger -> Security -> CORS -> Compression -> Timeout -> Rate Limit -> Auth -> Route handler.
+- Validate and sanitize all input; never trust client-provided file paths.
+- Keep dependencies up to date; audit for known vulnerabilities.
+
+## Backup & Rollback
+
+- Schedule automated database backups and test restores periodically.
+- Keep migration files reversible where possible; document rollback steps for risky migrations.
+- Version artifacts (Docker images, lockfile) per release for fast rollback.
+
+## Client Contract for WS / SSE
+
+- WebSocket/SSE endpoints must include the API version in the path (`/v1/ws/:topic`, `/v1/events/:topic`) or as a sub-protocol/header.
+- Every event/message must carry a versioned envelope: `{ version, topic, payload, timestamp }`.
+- Clients should send heartbeats and handle reconnections with exponential back-off.
+- Document accepted message formats and topic semantics for SDK consumers.
+
+## API Versioning & Backward Compatibility (All Protocols)
+
+- **REST**: prefix paths with `/v1` (or `/v2`) and/or accept `X-API-Version` header.
+- **WebSocket**: version in path (`/v1/ws/:topic`) and in every event envelope.
+- **SSE**: version in path (`/v1/events/:topic`) and in event data envelope.
+- **GraphQL**: version via URL segment (`/v1/graphql`) or schema directive; avoid breaking existing queries without deprecation.
+- **tRPC**: version routers and procedure paths (`v1.user.list`) and expose under `/api/v1/trpc`.
+- **gRPC**: encode version in package/proto file or service name.
+- Do not remove or rename response fields without a deprecation period and `CHANGELOG` entry.
+- Keep old clients working by supporting at least one previous major version during transition.
+
 ## REST API Response Contract
 
 ```ts
+export type ApiVersion = "v1";
+
 export type Meta = {
   code: number;
   status: "SUCCESS" | "ERROR";
   message?: string; // hanya dipakai saat SUCCESS
+  version: ApiVersion;
 };
 
 export type ApiSuccess<T> = {

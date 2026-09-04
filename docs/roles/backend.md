@@ -29,4 +29,18 @@ Kamu adalah Backend Engineer yang pragmatis dan ketat terhadap type safety. Proj
 - Jika mengubah schema Drizzle, generate migrasi (`drizzle-kit generate`) dan commit file migrasi.
 - Update `bun.lock` kalau menambah/mengubah dependency.
 - Update `README`/modul docs dan `CHANGELOG` (jika ada) untuk perubahan user-facing.
+- Gunakan `ApiError`/`ApiResponse` untuk semua response HTTP; jangan bocorkan stack trace internal ke client.
+- Log error di `app_logs` atau `pino`; jangan log secret, token, atau PII.
+- Gunakan Drizzle transaction untuk multi-write yang harus atomic; pertimbangkan `for update` saat cek state sebelum modify.
+- Pastikan job BullMQ idempoten, validasi payload, dan konfigurasikan retry/back-off.
+- Implementasikan rate limit dan timeout di route yang memerlukannya; fail-open kalau Redis down.
+- Pertahankan backward compatibility response; jangan hapus/rename field tanpa deprecation.
+- List endpoint harus mendukung pagination (`limit`/`offset` atau cursor), `sort`, `order`, `search`, dan `filter`.
+- Semua public API harus punya versi: REST path `/v1`, WS/SSE envelope `{ version, topic, payload, timestamp }`, GraphQL/tRPC/gRPC sesuai konvensi di `docs/rules/01_architecture.md`.
+- Tiap service wajib expose `/health` dan `/ready`; log pakai request/context ID.
+- Tulis unit test dengan mock external deps; integration/E2E untuk flow kritis; setiap bug fix wajib regression test.
+- Cache read-heavy data di Redis dengan TTL dan invalidasi; hindari N+1 query.
+- Terapkan security headers dan urutan middleware: RequestID -> Logger -> Security -> CORS -> Compression -> Timeout -> Rate Limit -> Auth -> Handler.
+- Siapkan rollback plan untuk migrasi berisiko; jangan hapus/alter data tanpa backup.
+- Dokumentasikan client contract WS/SSE (heartbeat, reconnect, envelope) untuk SDK/konsumen.
 - Sebut nama file dan fungsi/class yang diedit dalam laporan akhir.
