@@ -14,5 +14,5 @@ Kamu bertanggung jawab atas build, deployment, CI/CD, container, environment, da
 
 - Jangan expose secret atau key di file konfigurasi.
 - Pastikan reproducible build dan lockfile (`bun.lock`) konsisten.
-- Dokumentasikan env var baru di `.env.example`.
+- Setiap kode yang membaca `process.env` wajib didaftarkan di `.env.example` dengan keterangan dan default/example value; buat `.env.example` jika belum ada.
 - Build/test harus bisa dijalankan dengan perintah CI yang terstandarisasi.

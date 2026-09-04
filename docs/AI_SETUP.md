@@ -9,6 +9,8 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 | `implement task NN` / `kerjakan task NN` / `selesaikan task NN` | Mengerjakan/mengimplementasikan task | Baca task file → analisa kode terkait → edit source → verify → checklist ijo |
 | `create task <deskripsi>` / `buat task` | Membuat task baru | Jangan langsung mengerjakan. Buat file task di `docs/task/YYYY-MM-DD/NN_deskripsi_singkat.md`. |
 | `verdict` / `review` / `verdict menurutmu` | Review kode | Jangan edit source. Beri analisis + rekomendasi saja. |
+| `draft task` / `buat task dari ini` / user kirim summary atau file attachment | Preview task baru | AI baca input, buat ringkasan, judul, nomor, checklist, rekomendasi, pros/cons; TUNGGU `do it` sebelum buat file. |
+| `do it` / `buat` / `ok` | Setujui draft task | AI baru membuat file `docs/task/YYYY-MM-DD/NN_deskripsi.md` dan tambahkan ke todo list. |
 | `baca docs/AI_SETUP.md` | Setup awal | Baca file ini, `docs/README.md`, lalu siap menerima instruksi berikutnya. |
 
 ## 2. Role dan konteks
@@ -35,12 +37,31 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 3. **Baca rule prompt yang relevan** — pilih Prompt 1/2/3 dari `docs/README.md` jika diperlukan.
 4. **Analisa source file yang terkait** — jangan asumsi, baca baris yang ditunjuk task.
 5. **Implementasikan perubahan** — pakai `edit` / `multi_edit` / `write_to_file`, bukan copy-paste kode ke chat.
-6. **Update/tambah unit test** — setiap perubahan API harus diikuti unit test yang dapat diaudit; pastikan test lama masih relevan.
-7. **Verifikasi minimal** — jalankan type check dan unit test terkait.
-8. **Update task file** — ubah checklist dari `[ ]` menjadi `[x]` (✅ ijo) untuk item yang selesai.
-9. **Update todo list** — tandai task sebagai `completed` via `todo_list`.
+6. **Update `.env.example` jika perlu** — setiap env var baru dari `process.env` wajib didaftarkan di `.env.example` dengan keterangan dan default yang masuk akal.
+7. **Cek kode mati & duplikasi** — periksa fungsi/file tidak terpakai (dead code) dan duplikasi logika. Jika ditemukan, laporkan ke user dengan nama file/fungsi yang bersangkutan. Hapus atau ekstrak shared utility hanya jika aman dan sesuai scope task.
+8. **Update/tambah unit test** — setiap perubahan API harus diikuti unit test yang dapat diaudit; pastikan test lama masih relevan.
+9. **Verifikasi minimal** — jalankan type check dan unit test terkait.
+10. **Update task file** — ubah checklist dari `[ ]` menjadi `[x]` (✅ ijo) untuk item yang selesai.
+11. **Update todo list** — tandai task sebagai `completed` via `todo_list`.
 
-### Saat diminta `create task`:
+### Saat diminta `draft task` dari summary, text, atau file attachment:
+
+1. **Baca input user** — jika berupa file path/attachment, baca file tersebut terlebih dahulu.
+2. **Buat ringkasan masalah** — 1–3 bullet yang jelas.
+3. **Usulkan task** — judul, nomor urut berikutnya, path file `docs/task/YYYY-MM-DD/NN_deskripsi.md`, file terkait, dan checklist.
+4. **Berikan rekomendasi** — approach atau solusi yang disarankan.
+5. **Sebutkan pros & cons** — keuntungan, risiko, atau trade-off dari usulan task.
+6. **Tanyakan konfirmasi** — tanya user: "Draft task sudah siap. Ketik `do it` untuk saya buat file task-nya."
+7. **Jangan buat file task atau edit apapun sebelum user menyetujui**.
+
+### Saat user mengatakan `do it` / `buat` / `ok`:
+
+1. **Buat file task** — pakai draft yang sudah disetujui di `docs/task/YYYY-MM-DD/NN_deskripsi_singkat.md`.
+2. **Format wajib** — gunakan template task yang ada di bagian "Template task wajib".
+3. **Tambahkan ke todo list** — status `pending`.
+4. **Laporkan path file yang dibuat**.
+
+### Saat diminta `create task` (langsung, tanpa preview):
 
 1. **Jangan mengerjakan/implementasi apapun kecuali diminta secara eksplisit**.
 2. **Tentukan nomor urut berikutnya** dari `docs/task/YYYY-MM-DD/`.
@@ -74,6 +95,8 @@ Setiap file task harus ada bagian **Checklist** dengan checkbox Markdown. Contoh
 - [ ] Analisa kode terkait
 - [ ] Implementasi perbaikan
 - [ ] Update atau tambah unit test (terutama untuk perubahan API)
+- [ ] Update `.env.example` jika ada env var baru
+- [ ] Cek kode mati, file tidak terpakai, dan duplikasi fungsi
 - [ ] Verifikasi type check / test
 - [ ] Update dokumentasi jika perlu
 ```
