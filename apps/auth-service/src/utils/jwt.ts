@@ -20,12 +20,13 @@ export const generateToken = async ({ email, id, roles }: tokenParams) => {
   return token;
 };
 
-export const generateRefreshToken = async ({ email, national_id, id }: tokenParams) => {
+export const generateRefreshToken = async ({ email, national_id, id, roles }: tokenParams) => {
   const tmpExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
   const payload = {
     id,
     email,
     national_id,
+    roles,
     type: 'refresh',
     exp: tmpExp
   };
