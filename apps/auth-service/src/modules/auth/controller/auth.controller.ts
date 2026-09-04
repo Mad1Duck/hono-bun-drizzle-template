@@ -61,7 +61,7 @@ export const login = catchAsync(async (c) => {
   const accessToken = await generateToken(payload);
   const { token, tmpExp } = await generateRefreshToken(payload);
 
-  await saveRefreshToken(findUser.id, token, new Date(tmpExp));
+  await saveRefreshToken(findUser.id, token, new Date(tmpExp * 1000));
 
   return success(c, {
     firstName: findUser.firstName,
@@ -100,7 +100,7 @@ export const refreshToken = catchAsync(async (c) => {
     oldToken: refreshToken,
     userId: payload.id,
     newToken: newRefreshToken,
-    expiresAt: new Date(tmpExp),
+    expiresAt: new Date(tmpExp * 1000),
   });
 
   if (!rotated) {
