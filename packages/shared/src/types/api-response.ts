@@ -1,4 +1,4 @@
-import { type ApiVersion, API_VERSION } from "../constants/api-version";
+import { type ApiVersion } from "../constants/api-version";
 
 export type Meta = {
   code: number;
