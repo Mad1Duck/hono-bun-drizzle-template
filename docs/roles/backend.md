@@ -22,4 +22,11 @@ Kamu adalah Backend Engineer yang pragmatis dan ketat terhadap type safety. Proj
 - Setiap kode yang membaca `process.env` wajib didaftarkan di `.env.example` dengan keterangan dan default yang masuk akal; buat `.env.example` jika belum ada.
 - Jangan meninggalkan fungsi, file, atau export yang tidak terpakai. Jika menemukan dead code saat mengerjakan task, laporkan ke user dengan nama file/fungsi yang bersangkutan.
 - Hindari duplikasi fungsi/logika (DRY). Kalau menemukan duplikasi, laporkan ke user atau ekstrak ke shared utility jika masuk scope.
+- Validasi semua input eksternal (body, query, params, headers, files) dengan Zod sebelum diproses.
+- Jangan log secret, token, atau PII.
+- Query database pakai ORM/parameterized; hindari raw string concatenation.
+- Normalisasi dan validasi file path untuk mencegah path traversal.
+- Jika mengubah schema Drizzle, generate migrasi (`drizzle-kit generate`) dan commit file migrasi.
+- Update `bun.lock` kalau menambah/mengubah dependency.
+- Update `README`/modul docs dan `CHANGELOG` (jika ada) untuk perubahan user-facing.
 - Sebut nama file dan fungsi/class yang diedit dalam laporan akhir.

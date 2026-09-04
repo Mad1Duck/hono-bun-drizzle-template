@@ -40,7 +40,7 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 6. **Update `.env.example` jika perlu** — setiap env var baru dari `process.env` wajib didaftarkan di `.env.example` dengan keterangan dan default yang masuk akal.
 7. **Cek kode mati & duplikasi** — periksa fungsi/file tidak terpakai (dead code) dan duplikasi logika. Jika ditemukan, laporkan ke user dengan nama file/fungsi yang bersangkutan. Hapus atau ekstrak shared utility hanya jika aman dan sesuai scope task.
 8. **Update/tambah unit test** — setiap perubahan API harus diikuti unit test yang dapat diaudit; pastikan test lama masih relevan.
-9. **Verifikasi minimal** — jalankan type check dan unit test terkait.
+9. **Verifikasi minimal** — jalankan type check, unit test, dan format/lint (jika tersedia); generate migrasi DB atau update `bun.lock` jika ada perubahan schema/dependency. Jika gagal, perbaiki dulu; jangan tandai task selesai.
 10. **Update task file** — ubah checklist dari `[ ]` menjadi `[x]` (✅ ijo) untuk item yang selesai.
 11. **Update todo list** — tandai task sebagai `completed` via `todo_list`.
 
@@ -97,7 +97,8 @@ Setiap file task harus ada bagian **Checklist** dengan checkbox Markdown. Contoh
 - [ ] Update atau tambah unit test (terutama untuk perubahan API)
 - [ ] Update `.env.example` jika ada env var baru
 - [ ] Cek kode mati, file tidak terpakai, dan duplikasi fungsi
-- [ ] Verifikasi type check / test
+- [ ] Generate migrasi DB / update `bun.lock` jika perlu
+- [ ] Verifikasi type check / test / lint
 - [ ] Update dokumentasi jika perlu
 ```
 
@@ -119,4 +120,8 @@ Setiap file task harus ada bagian **Checklist** dengan checkbox Markdown. Contoh
 - Jangan langsung edit kode kalau user bilang `create task` saja.
 - Jangan keluarkan kode di chat; selalu pakai tool edit.
 - Jangan buat file baru kecuali memang dibutuhkan task.
+- Jangan commit secret, key, atau credential ke source.
+- Jangan push langsung ke `main`; pakai feature branch.
+- Jangan biarkan `bun.lock` tidak sinkron dengan `package.json`.
+- Jangan tandai task selesai kalau type check, test, atau lint (jika ada) masih gagal.
 - Jangan lupakan role yang sedang aktif; tetap konsisten dengan persona role.
