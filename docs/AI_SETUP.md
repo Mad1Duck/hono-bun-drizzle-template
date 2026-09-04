@@ -42,7 +42,8 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 8. **Update/tambah unit test** — setiap perubahan API harus diikuti unit test yang dapat diaudit; pastikan test lama masih relevan.
 9. **Verifikasi minimal** — jalankan type check, unit test, dan format/lint (jika tersedia); generate migrasi DB atau update `bun.lock` jika ada perubahan schema/dependency. Jika gagal, perbaiki dulu; jangan tandai task selesai.
 10. **Update task file** — ubah checklist dari `[ ]` menjadi `[x]` (✅ ijo) untuk item yang selesai.
-11. **Update todo list** — tandai task sebagai `completed` via `todo_list`.
+11. **Rename file task yang sudah selesai** — tambahkan suffix `_done` di nama file: `NN_deskripsi_singkat_done.md`.
+12. **Update todo list** — tandai task sebagai `completed` via `todo_list`.
 
 ### Saat diminta `draft task` dari summary, text, atau file attachment:
 

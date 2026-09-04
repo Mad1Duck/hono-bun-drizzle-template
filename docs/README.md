@@ -5,15 +5,17 @@
 Setiap task disimpan di folder `docs/task/YYYY-MM-DD/` dengan format:
 
 ```
-NN_deskripsi_singkat.md
+NN_deskripsi_singkat[_done].md
 ```
 
 - `NN` — nomor urut (contoh: `01`, `02`, …)
 - `deskripsi_singkat` — deskripsi singkat isu atau fitur, pakai snake_case
+- `_done` — **suffix opsional** yang ditambahkan saat task sudah selesai semua checklist-nya
 - `.md` — ekstensi wajib
 - Tanggal dalam path menunjukkan kapan task dibuat atau teridentifikasi.
 
-Contoh: `docs/task/2026-09-04/08_zod_middleware_kurang_tepat.md`
+Contoh aktif: `docs/task/2026-09-04/08_zod_middleware_kurang_tepat.md`  
+Contoh selesai: `docs/task/2026-09-04/01_transformasi_nomor_telepon_email_salah_done.md`
 
 ## Isi Tiap Task
 

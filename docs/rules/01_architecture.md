@@ -64,7 +64,8 @@
 - Branch names should follow convention: `feature/`, `fix/`, `hotfix/`, `refactor/`, or `task/<number>-<short-desc>`.
 - Commit messages should be concise and describe the change.
 - Keep tasks scoped; split into sub-tasks if a change crosses multiple domains.
-- Completed task files stay in `docs/task/YYYY-MM-DD/`; do not delete them. Mark them with `## Status` and green checkboxes.
+- Completed task files stay in `docs/task/YYYY-MM-DD/`; do not delete them.
+- Mark completed tasks with `## Status` and green checkboxes, then rename the file with a `_done` suffix: `NN_deskripsi_singkat_done.md`.
 
 ## Documentation
 
