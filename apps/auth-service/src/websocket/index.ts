@@ -2,9 +2,11 @@ import { ServerWebSocket } from 'bun';
 import { createBunWebSocket } from 'hono/bun';
 import { API_VERSION, versionedTopic, parseVersionedTopic } from '@repo/shared';
 
-const { upgradeWebSocket } = createBunWebSocket();
+const { websocket, upgradeWebSocket } = createBunWebSocket();
 
 const clients = new Map<ServerWebSocket, Set<string>>();
+
+export { websocket };
 
 export const wsHandler = upgradeWebSocket((c) => {
   const topic = c.req.param('topic');

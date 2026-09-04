@@ -1,12 +1,10 @@
 import { Hono } from 'hono';
-import { createBunWebSocket, serveStatic } from 'hono/bun';
+import { serveStatic } from 'hono/bun';
 import { logger } from 'hono/logger';
 import { errorHandler, API_VERSION } from '@repo/shared';
 import { join } from 'path';
 import routes from './routes';
-import { wsHandler } from './websocket';
-
-const { websocket } = createBunWebSocket();
+import { websocket, wsHandler } from './websocket';
 
 const app = new Hono()
   .use(logger())

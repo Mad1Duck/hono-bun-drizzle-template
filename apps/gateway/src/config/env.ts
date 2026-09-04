@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  PORT: z.coerce.number().default(8080),
-  JWT_SECRET: z.string().default('default'),
-  CORS_ORIGIN: z.string().default('localhost'),
+  PORT: z.coerce.number().default(3000),
+  JWT_SECRET: z.string().min(1),
+  CORS_ORIGIN: z.string().url().default('http://localhost:3000'),
   RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().default(60),
   AUTH_SERVICE_URL: z.string().url().default('http://localhost:3001'),
