@@ -3,9 +3,9 @@ import { z } from 'zod';
 const emailSchema = z.string().email();
 
 export const transformPhoneNumber = async (phoneNumber: string) => {
-  const error = await emailSchema.safeParse(phoneNumber);
+  const { success } = emailSchema.safeParse(phoneNumber);
 
-  if (error) {
+  if (!success) {
     const cleanedNumber = phoneNumber.replace(/\+/g, "");
 
     let transformedNumber = cleanedNumber;

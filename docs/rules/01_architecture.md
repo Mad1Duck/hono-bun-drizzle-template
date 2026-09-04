@@ -133,6 +133,8 @@
 - Prefer unit tests for pure logic and services; mock DB/Redis/external HTTP.
 - Use integration tests for DB/Redis interactions; reset state between tests.
 - Use E2E tests for critical user flows; run against a real-ish environment with seeded data.
+- Test files must live in a dedicated `test/` or `__tests__/` directory, not mixed with source files.
+- Name test files `*.test.ts` or `*.spec.ts` alongside the module they cover.
 - Factories/fixtures must be deterministic and safe to rerun.
 - Each bug fix must include a regression test.
 
