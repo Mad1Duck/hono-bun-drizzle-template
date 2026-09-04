@@ -1,6 +1,6 @@
 # AI Setup & Workflow
 
-File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SETUP.md`" atau "kerjakan task NN", dan AI wajib mengikuti pola di bawah.
+File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `SETUP.md`" atau "kerjakan task NN", dan AI wajib mengikuti pola di bawah.
 
 ## 1. Perintah yang dipahami
 
@@ -11,7 +11,7 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 | `verdict` / `review` / `verdict menurutmu` | Review kode | Jangan edit source. Beri analisis + rekomendasi saja. |
 | `draft task` / `buat task dari ini` / user kirim summary atau file attachment | Preview task baru | AI baca input, buat ringkasan, judul, nomor, checklist, rekomendasi, pros/cons; TUNGGU `do it` sebelum buat file. |
 | `do it` / `buat` / `ok` | Setujui draft task | AI baru membuat file `docs/task/YYYY-MM-DD/NN_deskripsi.md` dan tambahkan ke todo list. |
-| `baca docs/AI_SETUP.md` | Setup awal | Baca file ini, `docs/README.md`, lalu siap menerima instruksi berikutnya. |
+| `baca docs/SETUP.md` | Setup awal | Baca file ini, `docs/README.md`, lalu siap menerima instruksi berikutnya. |
 
 ## 2. Role dan konteks
 
@@ -32,7 +32,7 @@ File ini adalah panduan singkat untuk AI. User hanya perlu menyuruh "baca `AI_SE
 
 ### Saat diminta `implement task NN`:
 
-1. **Baca setup dulu** — `docs/AI_SETUP.md`, `docs/README.md`, dan `docs/roles/<role>.md`.
+1. **Baca setup dulu** — `docs/SETUP.md`, `docs/README.md`, dan `docs/roles/<role>.md`.
 2. **Baca task file** — `docs/task/YYYY-MM-DD/NN_deskripsi.md`.
 3. **Baca rule prompt yang relevan** — pilih Prompt 1/2/3 dari `docs/README.md` jika diperlukan.
 4. **Analisa source file yang terkait** — jangan asumsi, baca baris yang ditunjuk task.
