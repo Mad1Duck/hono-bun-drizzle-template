@@ -9,6 +9,9 @@ export class CircuitOpenError extends Error {
 
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
+// NOTE: Circuit breaker state is in-process per gateway instance.
+// Untuk horizontal scaling, pertimbangkan distributed circuit breaker yang disinkronkan
+// via Redis atau coordination service agar semua instance melihat state yang sama.
 export class CircuitBreaker {
   private state: CircuitState = 'CLOSED';
   private failures = 0;
@@ -86,11 +89,32 @@ type ResilienceOptions = {
   breaker?: CircuitBreaker;
 };
 
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
+
 const isRetryableError = (error: unknown): boolean => {
   if (error instanceof CircuitOpenError) return false;
   if (error instanceof TypeError) return true;
   if (error instanceof DOMException && error.name === 'AbortError') return true;
   return false;
+};
+
+const isIdempotent = (init: RequestInit): boolean => {
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (IDEMPOTENT_METHODS.has(method)) return true;
+
+  const headers = init.headers;
+  if (headers instanceof Headers) return headers.has('Idempotency-Key');
+  if (Array.isArray(headers)) {
+    return headers.some(([key]) => key.toLowerCase() === 'idempotency-key');
+  }
+  if (headers && typeof headers === 'object') {
+    return Object.keys(headers).some((key) => key.toLowerCase() === 'idempotency-key');
+  }
+  return false;
+};
+
+const isStreamBody = (body: unknown): boolean => {
+  return body instanceof ReadableStream;
 };
 
 export const fetchWithResilience = async (
@@ -102,6 +126,7 @@ export const fetchWithResilience = async (
   const retries = options.retries ?? env.PROXY_RETRIES;
   const retryDelayMs = options.retryDelayMs ?? env.PROXY_RETRY_DELAY_MS;
   const breaker = options.breaker;
+  const allowRetry = isIdempotent(init) && !isStreamBody(init.body);
 
   const attempt = async (): Promise<Response> => {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -114,7 +139,7 @@ export const fetchWithResilience = async (
         return await fetchWithTimeout(input, init, timeout);
       } catch (err) {
         const lastAttempt = attempt === retries;
-        if (!lastAttempt && isRetryableError(err)) {
+        if (!lastAttempt && allowRetry && isRetryableError(err)) {
           continue;
         }
         throw err;

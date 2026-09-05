@@ -15,3 +15,4 @@ export * from './middleware/request-id';
 export * from './middleware/request-logger';
 export * from './types/hono';
 export * from './utils/discovery';
+export * from './utils/redis-health';

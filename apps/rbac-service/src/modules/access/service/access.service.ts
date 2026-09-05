@@ -1,4 +1,5 @@
 import { db, userRoles, permissions, rolePermissions, auditRoleChanges, users } from '@repo/database';
+import { ApiError } from '@repo/shared';
 import { eq, and } from 'drizzle-orm';
 
 export async function listRoles() {
@@ -70,6 +71,9 @@ export async function changeUserRole({
   return await db.transaction(async (tx) => {
     const [targetUser] = await tx.select().from(users).where(eq(users.id, targetUserId)).limit(1);
     if (!targetUser) return null;
+
+    const [role] = await tx.select().from(userRoles).where(eq(userRoles.id, newRoleId)).limit(1);
+    if (!role) throw new ApiError('NOT_FOUND');
 
     const oldRoleId = targetUser.roleId;
 

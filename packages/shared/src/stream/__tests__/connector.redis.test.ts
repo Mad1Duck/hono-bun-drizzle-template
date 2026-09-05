@@ -8,6 +8,7 @@ const psubscribed: string[] = [];
 
 mock.module("ioredis", () => ({
   Redis: class MockRedis {
+    status = 'ready';
     on(event: string, cb: Listener) {
       if (event === "pmessage") pmessageListener = cb;
       return this;
