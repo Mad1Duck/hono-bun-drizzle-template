@@ -11,6 +11,7 @@ const envSchema = z.object({
   PROXY_RETRY_DELAY_MS: z.coerce.number().default(500),
   PROXY_CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().default(5),
   PROXY_CIRCUIT_BREAKER_RESET_MS: z.coerce.number().default(30000),
+  DISTRIBUTED_CIRCUIT_BREAKER: z.coerce.boolean().default(false),
   AUTH_SERVICE_URL: z.string().url().default('http://localhost:3001'),
   NOTIFICATION_SERVICE_URL: z.string().url().default('http://localhost:3004'),
   USER_SERVICE_URL: z.string().url().default('http://localhost:3002'),

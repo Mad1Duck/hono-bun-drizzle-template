@@ -1,5 +1,5 @@
 import { db, userRoles, permissions, rolePermissions, auditRoleChanges, users } from '@repo/database';
-import { ApiError } from '@repo/shared';
+import { ApiError, broadcast, encode, revokeUserTokens, USER_ROLE_CHANGED } from '@repo/shared';
 import { eq, and } from 'drizzle-orm';
 
 export async function listRoles() {
@@ -68,14 +68,16 @@ export async function changeUserRole({
   newRoleId,
   reason,
 }: { changedByUserId: string; targetUserId: string; newRoleId: number; reason?: string; }) {
-  return await db.transaction(async (tx) => {
+  let oldRoleId: number | null = null;
+
+  const result = await db.transaction(async (tx) => {
     const [targetUser] = await tx.select().from(users).where(eq(users.id, targetUserId)).limit(1);
     if (!targetUser) return null;
 
     const [role] = await tx.select().from(userRoles).where(eq(userRoles.id, newRoleId)).limit(1);
     if (!role) throw new ApiError('NOT_FOUND');
 
-    const oldRoleId = targetUser.roleId;
+    oldRoleId = targetUser.roleId;
 
     const [updatedUser] = await tx
       .update(users)
@@ -93,4 +95,21 @@ export async function changeUserRole({
 
     return updatedUser;
   });
+
+  if (result) {
+    await revokeUserTokens(targetUserId);
+
+    const eventPayload = {
+      userId: targetUserId,
+      oldRoleId,
+      newRoleId,
+      changedByUserId,
+      reason,
+      updatedAt: new Date().toISOString(),
+    };
+
+    broadcast(USER_ROLE_CHANGED, encode(USER_ROLE_CHANGED, eventPayload));
+  }
+
+  return result;
 }

@@ -1,6 +1,7 @@
 import { app } from './app';
 import { pool } from '@repo/database';
-import { logger } from '@repo/logger';
+import { closeLogger, logger } from '@repo/logger';
+import { registerGracefulShutdown } from '@repo/shared';
 
 const port = process.env.NOTIFICATION_SERVICE_PORT || 3004;
 
@@ -11,12 +12,11 @@ const server = Bun.serve({
 
 logger.info(`notification-service listening on http://localhost:${port}`);
 
-const shutdown = async (signal: string) => {
-  logger.info(`${signal} received, shutting down notification-service gracefully`);
-  server.stop();
-  await pool.end();
-  process.exit(0);
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+registerGracefulShutdown(
+  [
+    { name: 'http-server', close: () => server.stop(true) },
+    { name: 'database', close: () => pool.end() },
+    { name: 'logger', close: closeLogger },
+  ],
+  { logger },
+);

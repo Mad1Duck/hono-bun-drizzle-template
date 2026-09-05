@@ -1,4 +1,7 @@
 import { env } from '../config/env';
+import { Redis } from 'ioredis';
+import { redisConfig } from '@repo/config';
+import { logger } from '@repo/logger';
 
 export class CircuitOpenError extends Error {
   constructor(message = 'Circuit breaker is OPEN') {
@@ -7,12 +10,17 @@ export class CircuitOpenError extends Error {
   }
 }
 
+export interface CircuitBreakerLike {
+  call<T>(fn: () => Promise<T>): Promise<T>;
+  getState: () => string | Promise<string>;
+}
+
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 // NOTE: Circuit breaker state is in-process per gateway instance.
 // Untuk horizontal scaling, pertimbangkan distributed circuit breaker yang disinkronkan
 // via Redis atau coordination service agar semua instance melihat state yang sama.
-export class CircuitBreaker {
+export class CircuitBreaker implements CircuitBreakerLike {
   private state: CircuitState = 'CLOSED';
   private failures = 0;
   private nextAttempt = 0;
@@ -65,6 +73,83 @@ export class CircuitBreaker {
       this.nextAttempt = Date.now() + this.resetTimeoutMs;
     }
   }
+
+  getState(): 'CLOSED' | 'OPEN' | 'HALF_OPEN' {
+    return this.state;
+  }
+}
+
+export class DistributedCircuitBreaker implements CircuitBreakerLike {
+  private redis: Redis;
+  private keyBase: string;
+
+  constructor(
+    targetBaseUrl: string,
+    private failureThreshold = env.PROXY_CIRCUIT_BREAKER_THRESHOLD,
+    private resetTimeoutMs = env.PROXY_CIRCUIT_BREAKER_RESET_MS,
+  ) {
+    this.keyBase = `circuit:${targetBaseUrl.replace(/[^a-zA-Z0-9_-]/g, ':')}`;
+    this.redis = new Redis({
+      ...redisConfig,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 2000,
+      lazyConnect: true,
+    });
+    this.redis.on('error', (err) =>
+      logger.debug({ err, target: targetBaseUrl }, 'Redis circuit breaker connection error'),
+    );
+  }
+
+  private failuresKey() {
+    return `${this.keyBase}:failures`;
+  }
+
+  private nextAttemptKey() {
+    return `${this.keyBase}:next_attempt`;
+  }
+
+  async call<T>(fn: () => Promise<T>): Promise<T> {
+    const now = Date.now();
+    const [failuresRaw, nextAttemptRaw] = await this.redis.mget(this.failuresKey(), this.nextAttemptKey());
+    const failures = Number(failuresRaw || 0);
+    const nextAttempt = Number(nextAttemptRaw || 0);
+
+    if (nextAttempt > now) {
+      throw new CircuitOpenError();
+    }
+
+    try {
+      const result = await fn();
+      await this.redis.del(this.failuresKey(), this.nextAttemptKey());
+      return result;
+    } catch (err) {
+      const newFailures = failures + 1;
+      const pipeline = this.redis.pipeline().set(this.failuresKey(), newFailures);
+
+      if (newFailures >= this.failureThreshold) {
+        const openUntil = now + this.resetTimeoutMs;
+        pipeline.setex(this.nextAttemptKey(), Math.ceil(this.resetTimeoutMs / 1000), openUntil);
+        pipeline.expire(this.failuresKey(), Math.ceil(this.resetTimeoutMs / 1000));
+      } else {
+        pipeline.expire(this.failuresKey(), 3600);
+      }
+
+      await pipeline.exec();
+      throw err;
+    }
+  }
+
+  async getState(): Promise<'CLOSED' | 'OPEN' | 'HALF_OPEN'> {
+    const now = Date.now();
+    const [failuresRaw, nextAttemptRaw] = await this.redis.mget(this.failuresKey(), this.nextAttemptKey());
+    const failures = Number(failuresRaw || 0);
+    const nextAttempt = Number(nextAttemptRaw || 0);
+
+    if (nextAttempt > now) return 'OPEN';
+    if (failures >= this.failureThreshold && nextAttempt > 0) return 'HALF_OPEN';
+    if (failures >= this.failureThreshold) return 'OPEN';
+    return 'CLOSED';
+  }
 }
 
 export const fetchWithTimeout = async (
@@ -86,7 +171,7 @@ type ResilienceOptions = {
   timeout?: number;
   retries?: number;
   retryDelayMs?: number;
-  breaker?: CircuitBreaker;
+  breaker?: CircuitBreakerLike;
 };
 
 const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);

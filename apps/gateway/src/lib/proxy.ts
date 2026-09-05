@@ -2,14 +2,20 @@ import { Context } from 'hono';
 import { filterHeaders } from '../utils/headers';
 import { REQUEST_ID_HEADER } from '../config/constants';
 import type { Variables } from '../types/hono';
-import { fetchWithResilience, CircuitBreaker } from './fetch';
+import { env } from '../config/env';
+import { fetchWithResilience, CircuitBreaker, DistributedCircuitBreaker, type CircuitBreakerLike } from './fetch';
+import { registerCircuitBreaker } from './metrics';
 import { failureFromCode } from './response';
 
-const breakers = new Map<string, CircuitBreaker>();
+const breakers = new Map<string, CircuitBreakerLike>();
 
-const getBreaker = (targetBaseUrl: string): CircuitBreaker => {
+const getBreaker = (targetBaseUrl: string): CircuitBreakerLike => {
   if (!breakers.has(targetBaseUrl)) {
-    breakers.set(targetBaseUrl, new CircuitBreaker());
+    const breaker = env.DISTRIBUTED_CIRCUIT_BREAKER
+      ? new DistributedCircuitBreaker(targetBaseUrl)
+      : new CircuitBreaker();
+    breakers.set(targetBaseUrl, breaker);
+    registerCircuitBreaker(targetBaseUrl, breaker);
   }
   return breakers.get(targetBaseUrl)!;
 };

@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import { redisConfig } from '@repo/config';
-import { logger } from '@repo/logger';
+import { closeLogger, logger } from '@repo/logger';
+import { registerGracefulShutdown } from '@repo/shared';
 import { sendEmail } from './service/email.service';
 
 const emailWorker = new Worker('email-queue', async (job) => {
@@ -18,11 +19,10 @@ const emailWorker = new Worker('email-queue', async (job) => {
 
 logger.info('email-worker started');
 
-const shutdown = async (signal: string) => {
-  logger.info(`${signal} received, closing email-worker gracefully`);
-  await emailWorker.close();
-  process.exit(0);
-};
-
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+registerGracefulShutdown(
+  [
+    { name: 'email-worker', close: () => emailWorker.close() },
+    { name: 'logger', close: closeLogger },
+  ],
+  { logger },
+);

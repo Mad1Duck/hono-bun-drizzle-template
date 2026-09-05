@@ -1,6 +1,7 @@
 import { app } from './app';
 import { env } from './config/env';
-import { logger } from '@repo/logger';
+import { closeLogger, logger } from '@repo/logger';
+import { registerGracefulShutdown } from '@repo/shared';
 import { websocket } from './stream/connector/ws.connector';
 
 const server = Bun.serve({
@@ -11,11 +12,10 @@ const server = Bun.serve({
 
 logger.info(`gateway listening on http://localhost:${env.PORT}`);
 
-const shutdown = (signal: string) => {
-  logger.info(`${signal} received, shutting down gateway gracefully`);
-  server.stop();
-  process.exit(0);
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+registerGracefulShutdown(
+  [
+    { name: 'http-server', close: () => server.stop(true) },
+    { name: 'logger', close: closeLogger },
+  ],
+  { logger },
+);

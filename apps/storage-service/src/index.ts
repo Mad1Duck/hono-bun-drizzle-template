@@ -1,5 +1,6 @@
 import { app } from './app';
-import { logger } from '@repo/logger';
+import { closeLogger, logger } from '@repo/logger';
+import { registerGracefulShutdown } from '@repo/shared';
 
 const port = process.env.STORAGE_SERVICE_PORT ? Number(process.env.STORAGE_SERVICE_PORT) : 3003;
 
@@ -10,11 +11,10 @@ const server = Bun.serve({
 
 logger.info(`storage-service listening on http://localhost:${server.port}`);
 
-const shutdown = (signal: string) => {
-  logger.info(`${signal} received, shutting down storage-service gracefully`);
-  server.stop();
-  process.exit(0);
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+registerGracefulShutdown(
+  [
+    { name: 'http-server', close: () => server.stop(true) },
+    { name: 'logger', close: closeLogger },
+  ],
+  { logger },
+);

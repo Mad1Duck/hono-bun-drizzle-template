@@ -9,6 +9,7 @@ import { rateLimit } from './middleware/rate-limit';
 import { API_VERSION } from '@repo/shared';
 import { errorHandler } from './middleware/error-handler';
 import { notFound } from './middleware/not-found';
+import { metricsMiddleware } from './lib/metrics';
 import routes from './routes';
 import stream from './stream/handler';
 
@@ -21,6 +22,7 @@ const app = new Hono()
   .use(compression)
   .use(requestTimeout)
   .use(rateLimit)
+  .use(metricsMiddleware)
   .route(`/${API_VERSION}`, routes)
   .route('/', stream)
   .notFound(notFound)

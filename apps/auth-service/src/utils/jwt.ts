@@ -17,13 +17,15 @@ const getAccessTtlSeconds = () => {
 };
 
 export const generateToken = async ({ email, id, roles, isPlatformOwner }: tokenParams) => {
+  const now = Math.floor(Date.now() / 1000);
   const payload = {
     id,
     email,
     roles,
     isPlatformOwner,
     type: 'access',
-    exp: Math.floor(Date.now() / 1000) + getAccessTtlSeconds(),
+    iat: now,
+    exp: now + getAccessTtlSeconds(),
   };
   const secret = process.env.JWT_SECRET || 'default';
   const token = await sign(payload, secret, 'HS256');
@@ -35,7 +37,8 @@ export const generateRefreshToken = async ({ email, national_id, id, roles, isPl
   const refreshTtlDays = process.env.REFRESH_TOKEN_TTL_DAYS
     ? Number(process.env.REFRESH_TOKEN_TTL_DAYS)
     : DEFAULT_REFRESH_TTL_DAYS;
-  const tmpExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * refreshTtlDays;
+  const now = Math.floor(Date.now() / 1000);
+  const tmpExp = now + 60 * 60 * 24 * refreshTtlDays;
   const payload = {
     id,
     email,
@@ -43,6 +46,7 @@ export const generateRefreshToken = async ({ email, national_id, id, roles, isPl
     roles,
     isPlatformOwner,
     type: 'refresh',
+    iat: now,
     exp: tmpExp
   };
   const secret = process.env.JWT_SECRET || 'default';
