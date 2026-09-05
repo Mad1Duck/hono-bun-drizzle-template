@@ -40,7 +40,7 @@ describe("gateway routes", () => {
 
   it("GET /v1/health/ready returns ok when downstream is healthy", async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 200 }) as any;
+    globalThis.fetch = (async () => new Response(null, { status: 200 })) as any;
     try {
       const res = await app.request("/v1/health/ready");
       expect(res.status).toBe(200);
@@ -53,7 +53,7 @@ describe("gateway routes", () => {
 
   it("GET /v1/health/ready returns degraded when downstream is unhealthy", async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 503 }) as any;
+    globalThis.fetch = (async () => new Response(null, { status: 503 })) as any;
     try {
       const res = await app.request("/v1/health/ready");
       expect(res.status).toBe(503);
@@ -71,14 +71,14 @@ describe("gateway routes", () => {
 
   it("POST /v1/auth/register proxies to auth service", async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async (input: any, init: any) => {
+    globalThis.fetch = (async (input: any, init: any) => {
       const url = new URL(input as string);
       expect(url.pathname).toBe("/v1/auth/register");
       return new Response(
         JSON.stringify({ data: { id: "user-1" }, error: null, meta: { status: "SUCCESS", code: 201, version: "v1" } }),
         { status: 201, headers: { "content-type": "application/json" } }
       ) as any;
-    };
+    }) as any;
     try {
       const res = await app.request("/v1/auth/register", {
         method: "POST",

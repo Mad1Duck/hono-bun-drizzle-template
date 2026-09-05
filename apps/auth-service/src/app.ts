@@ -3,6 +3,7 @@ import { serveStatic } from 'hono/bun';
 import { logger } from 'hono/logger';
 import { errorHandler, API_VERSION } from '@repo/shared';
 import { join } from 'path';
+import health from './routes/health';
 import routes from './routes';
 import { websocket, wsHandler } from './websocket';
 
@@ -31,6 +32,7 @@ const app = new Hono()
     root: './public',
     rewriteRequestPath: (path) => path.replace('/file-data/', ''),
   }))
+  .route('/health', health)
   .get(`/${API_VERSION}/ws/:topic`, wsHandler)
   .route(`/${API_VERSION}`, routes)
   .onError(errorHandler);

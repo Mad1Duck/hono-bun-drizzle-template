@@ -9,6 +9,7 @@
   "dependencies": {
     "@repo/logger": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
     "hono": "^4.12.27"
   }
 }

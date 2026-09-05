@@ -3,7 +3,7 @@ import type { Topic } from "../constants/topics";
 
 export type VersionedEvent<T = unknown> = {
   version: ApiVersion;
-  topic: Topic;
+  topic: string;
   payload: T;
   timestamp: number;
   meta?: unknown;

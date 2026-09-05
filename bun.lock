@@ -69,6 +69,7 @@
       "dependencies": {
         "@repo/database": "workspace:*",
         "@repo/logger": "workspace:*",
+        "@repo/shared": "workspace:*",
         "hono": "^4.12.27",
       },
     },
