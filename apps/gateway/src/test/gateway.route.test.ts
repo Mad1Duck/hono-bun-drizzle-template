@@ -4,6 +4,10 @@ process.env.JWT_SECRET = "test-secret";
 process.env.AUTH_SERVICE_URL = "http://localhost:3001";
 process.env.NOTIFICATION_SERVICE_URL = "http://localhost:3004";
 process.env.USER_SERVICE_URL = "http://localhost:3002";
+process.env.STORAGE_SERVICE_URL = "http://localhost:3003";
+process.env.RBAC_SERVICE_URL = "http://localhost:3005";
+process.env.PROXY_TIMEOUT_MS = "100";
+process.env.PROXY_RETRIES = "0";
 
 mock.module("ioredis", () => ({
   Redis: class MockRedis {
@@ -89,6 +93,52 @@ describe("gateway routes", () => {
       expect(res.status).toBe(201);
       const body = await res.json();
       expect(body.data.id).toBe("user-1");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("POST /v1/auth/register forwards X-Request-Id to downstream", async () => {
+    const originalFetch = globalThis.fetch;
+    let capturedHeaders: Headers | undefined;
+    globalThis.fetch = (async (input: any, init: any) => {
+      capturedHeaders = init?.headers;
+      const url = new URL(input as string);
+      expect(url.pathname).toBe("/v1/auth/register");
+      return new Response(
+        JSON.stringify({ data: { id: "user-1" }, error: null, meta: { status: "SUCCESS", code: 201, version: "v1" } }),
+        { status: 201, headers: { "content-type": "application/json" } }
+      ) as any;
+    }) as any;
+    try {
+      const res = await app.request("/v1/auth/register", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "u", password: "P@ssw0rd" }),
+      });
+      expect(res.status).toBe(201);
+      expect(capturedHeaders).toBeDefined();
+      expect((capturedHeaders as unknown as Headers).get("X-Request-Id")).toBeTruthy();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("POST /v1/auth/register returns ApiError when downstream is unreachable", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      throw new TypeError("fetch failed");
+    }) as any;
+    try {
+      const res = await app.request("/v1/auth/register", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "u", password: "P@ssw0rd" }),
+      });
+      expect(res.status).toBe(502);
+      const body = await res.json();
+      expect(body.meta.status).toBe("ERROR");
+      expect(body.error.code).toBe("BAD_GATEWAY");
     } finally {
       globalThis.fetch = originalFetch;
     }

@@ -29,6 +29,7 @@ export async function getUser({ identifier }: { identifier: string; }) {
       phone: users.phone,
       username: users.username,
       createdAt: users.createdAt,
+      isPlatformOwner: users.isPlatformOwner,
       roles: userRoles.name,
       passwordHash: credentials.passwordHash,
     })

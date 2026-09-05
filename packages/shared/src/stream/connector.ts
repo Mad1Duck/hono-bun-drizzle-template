@@ -9,7 +9,7 @@ export interface EventHub<T = unknown> {
   subscribe: (listener: StreamListener<T>) => () => void;
 }
 
-class InMemoryEventHub<T = unknown> implements EventHub<T> {
+export class InMemoryEventHub<T = unknown> implements EventHub<T> {
   private listeners = new Set<StreamListener<T>>();
 
   broadcast(topic: string, payload: T) {
@@ -26,7 +26,7 @@ class InMemoryEventHub<T = unknown> implements EventHub<T> {
   }
 }
 
-class RedisEventHub<T = unknown> implements EventHub<T> {
+export class RedisEventHub<T = unknown> implements EventHub<T> {
   private listeners = new Set<StreamListener<T>>();
   private publisher: Redis;
   private subscriber: Redis;
@@ -55,7 +55,9 @@ class RedisEventHub<T = unknown> implements EventHub<T> {
 
   subscribe(listener: StreamListener<T>) {
     this.listeners.add(listener);
-    // Subscribe ke semua channel v1:* dengan pattern subscribe
+    // Subscribe ke semua channel v1:* dengan pattern subscribe.
+    // NOTE: setiap instance service menerima semua event v1:*. Untuk skala besar,
+    // pertimbangkan psubscribe per topik atau ganti ke Redis Streams.
     const pattern = versionedTopic('*');
     if (!this.subscribedPattern) {
       this.subscriber.psubscribe(pattern);

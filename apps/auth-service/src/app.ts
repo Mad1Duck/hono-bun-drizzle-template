@@ -1,14 +1,14 @@
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
-import { logger } from 'hono/logger';
-import { errorHandler, API_VERSION } from '@repo/shared';
+import { errorHandler, API_VERSION, requestId, requestLogger } from '@repo/shared';
 import { join } from 'path';
 import health from './routes/health';
 import routes from './routes';
 import { websocket, wsHandler } from './websocket';
 
 const app = new Hono()
-  .use(logger())
+  .use(requestId)
+  .use(requestLogger)
   .use('/public/*', async (c) => {
     const publicPath = join(process.cwd(), 'public');
     const raw = c.req.path.replace('/public/', '');

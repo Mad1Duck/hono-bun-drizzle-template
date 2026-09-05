@@ -14,6 +14,9 @@ export const ERROR_CATALOG = {
   CONFLICT: { statusCode: 409, message: "Resource is still referenced by other data" },
   HTTP_EXCEPTION: { statusCode: 500, message: "Request Error" },
   INTERNAL_ERROR: { statusCode: 500, message: "Internal Server Error" },
+  BAD_GATEWAY: { statusCode: 502, message: "Bad gateway" },
+  SERVICE_UNAVAILABLE: { statusCode: 503, message: "Service unavailable" },
+  GATEWAY_TIMEOUT: { statusCode: 504, message: "Gateway timeout" },
 } as const satisfies Record<string, { statusCode: ContentfulStatusCode; message: string; }>;
 
 export type ErrorCode = keyof typeof ERROR_CATALOG;

@@ -1,6 +1,6 @@
-import { jwt } from 'hono/jwt';
+import { createAuthentication } from '@repo/shared';
 import { env } from '../config/env';
 
 // Gatekeeper JWT di edge, sebelum request diteruskan ke service. Downstream service
 // tetap boleh (dan sebaiknya) verifikasi ulang
-export const authentication = jwt({ secret: env.JWT_SECRET, alg: 'HS256' });
+export const authentication = createAuthentication(env.JWT_SECRET);

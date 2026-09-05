@@ -55,7 +55,8 @@ export const login = catchAsync(async (c) => {
   const payload = {
     id: findUser.id,
     email: findUser.email,
-    roles: findUser.roles || ""
+    roles: findUser.roles || "",
+    isPlatformOwner: findUser.isPlatformOwner,
   };
 
   const accessToken = await generateToken(payload);
@@ -91,6 +92,7 @@ export const refreshToken = catchAsync(async (c) => {
     id: decoded.id as string,
     email: decoded.email as string,
     roles: decoded.roles as string,
+    isPlatformOwner: (decoded.isPlatformOwner as boolean) ?? false,
   };
 
   const newAccessToken = await generateToken(payload);

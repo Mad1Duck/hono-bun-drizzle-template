@@ -1,8 +1,7 @@
-import { jwt } from "hono/jwt";
-import { catchAsync, ApiError } from "@repo/shared";
+import { createAuthentication, catchAsync, ApiError } from "@repo/shared";
 import { getUserById } from "@/modules/auth/service/auth.service";
 
-export const authentication = jwt({ secret: process.env.JWT_SECRET || 'default', alg: 'HS256' });
+export const authentication = createAuthentication(process.env.JWT_SECRET || 'default');
 
 export const authenticationStoreOwner = catchAsync(async (c, next) => {
   const { id } = c.get("jwtPayload") as { id: string; };
