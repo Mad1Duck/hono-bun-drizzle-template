@@ -9,6 +9,7 @@ export type StreamListener<T = unknown> = (topic: string, payload: T) => void;
 export interface EventHub<T = unknown> {
   broadcast: (topic: string, payload: T) => void;
   subscribe: (listener: StreamListener<T>) => () => void;
+  close: () => Promise<void>;
 }
 
 export class InMemoryEventHub<T = unknown> implements EventHub<T> {
@@ -25,6 +26,10 @@ export class InMemoryEventHub<T = unknown> implements EventHub<T> {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  async close() {
+    this.listeners.clear();
   }
 }
 
@@ -123,6 +128,14 @@ export class RedisEventHub<T = unknown> implements EventHub<T> {
       }
     };
   }
+
+  async close() {
+    await Promise.all([
+      this.publisher.quit().catch(() => {}),
+      this.subscriber.quit().catch(() => {}),
+    ]);
+    this.connected = false;
+  }
 }
 
 let _hub: EventHub | null = null;
@@ -140,7 +153,9 @@ export const getEventHub = (): EventHub => {
 export const eventHub: EventHub = {
   broadcast: (topic, payload) => getEventHub().broadcast(topic, payload),
   subscribe: (listener) => getEventHub().subscribe(listener),
+  close: () => getEventHub().close(),
 };
 
 export const broadcast = (topic: string, payload: unknown) => eventHub.broadcast(topic, payload);
 export const subscribe = (listener: StreamListener) => eventHub.subscribe(listener);
+export const closeEventHub = () => eventHub.close();

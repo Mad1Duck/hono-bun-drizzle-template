@@ -1,5 +1,5 @@
 import { db, userRoles, permissions, rolePermissions, auditRoleChanges, users } from '@repo/database';
-import { ApiError, broadcast, encode, revokeUserTokens, USER_ROLE_CHANGED } from '@repo/shared';
+import { ApiError, encode, getEventBroker, revokeUserTokens, USER_ROLE_CHANGED } from '@repo/shared';
 import { eq, and } from 'drizzle-orm';
 
 export async function listRoles() {
@@ -108,7 +108,7 @@ export async function changeUserRole({
       updatedAt: new Date().toISOString(),
     };
 
-    broadcast(USER_ROLE_CHANGED, encode(USER_ROLE_CHANGED, eventPayload));
+    await getEventBroker().publish(USER_ROLE_CHANGED, encode(USER_ROLE_CHANGED, eventPayload));
   }
 
   return result;

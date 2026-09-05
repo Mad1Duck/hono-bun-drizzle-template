@@ -1,7 +1,7 @@
-import { db, users } from '@repo/database';
+import { db, users, idempotencyKeys } from '@repo/database';
 import { eq } from 'drizzle-orm';
 import { logger } from '@repo/logger';
-import { subscribe, USER_ROLE_CHANGED, type VersionedEvent } from '@repo/shared';
+import { createEventBroker, USER_ROLE_CHANGED, type VersionedEvent } from '@repo/shared';
 
 type UserRoleChangedPayload = {
   userId: string;
@@ -12,13 +12,33 @@ type UserRoleChangedPayload = {
   updatedAt: string;
 };
 
-// In-memory idempotency guard. Redis streams or persistent idempotency
-// storage should be used once the service is scaled horizontally.
-const lastProcessedAt = new Map<string, number>();
+const idempotencyKey = (userId: string) => `${USER_ROLE_CHANGED}:${userId}`;
 
-const isDuplicate = (userId: string, timestamp: number): boolean => {
-  const last = lastProcessedAt.get(userId) ?? 0;
-  return timestamp <= last;
+const isDuplicate = async (userId: string, updatedAt: string): Promise<boolean> => {
+  const rows = await db
+    .select({ value: idempotencyKeys.value })
+    .from(idempotencyKeys)
+    .where(eq(idempotencyKeys.key, idempotencyKey(userId)));
+
+  if (rows.length === 0) return false;
+
+  const existing = new Date(rows[0].value ?? 0).getTime();
+  const incoming = new Date(updatedAt).getTime();
+  return Number.isNaN(incoming) ? false : incoming <= existing;
+};
+
+const markProcessed = async (userId: string, updatedAt: string) => {
+  await db
+    .insert(idempotencyKeys)
+    .values({
+      key: idempotencyKey(userId),
+      topic: USER_ROLE_CHANGED,
+      value: updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: idempotencyKeys.key,
+      set: { value: updatedAt, processedAt: new Date() },
+    });
 };
 
 const applyUserRoleChanged = async (event: VersionedEvent<UserRoleChangedPayload>): Promise<void> => {
@@ -30,14 +50,14 @@ const applyUserRoleChanged = async (event: VersionedEvent<UserRoleChangedPayload
     return;
   }
 
-  if (isDuplicate(userId, timestamp)) {
+  if (await isDuplicate(userId, updatedAt)) {
     logger.debug({ userId, newRoleId, timestamp }, 'duplicate UserRoleChanged event ignored');
     return;
   }
 
   try {
     await db.update(users).set({ roleId: newRoleId }).where(eq(users.id, userId));
-    lastProcessedAt.set(userId, timestamp);
+    await markProcessed(userId, updatedAt);
     logger.info(
       { userId, newRoleId, changedByUserId: event.payload.changedByUserId },
       'applied UserRoleChanged event',
@@ -49,10 +69,17 @@ const applyUserRoleChanged = async (event: VersionedEvent<UserRoleChangedPayload
   }
 };
 
-export const startUserRoleChangedConsumer = (): (() => void) => {
-  return subscribe((topic, payload) => {
+const broker = createEventBroker({ clientId: 'user-service', groupId: 'user-service' });
+
+export const startUserRoleChangedConsumer = (): (() => Promise<void>) => {
+  const unsubscribe = broker.subscribe((topic, payload) => {
     if (topic !== USER_ROLE_CHANGED) return;
     const event = payload as VersionedEvent<UserRoleChangedPayload>;
     void applyUserRoleChanged(event);
   });
+
+  return async () => {
+    unsubscribe();
+    await broker.close();
+  };
 };
