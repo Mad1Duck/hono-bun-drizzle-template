@@ -8,6 +8,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().default(60),
   AUTH_SERVICE_URL: z.string().url().default('http://localhost:3001'),
   NOTIFICATION_SERVICE_URL: z.string().url().default('http://localhost:3004'),
+  USER_SERVICE_URL: z.string().url().default('http://localhost:3002'),
 });
 
 export const env = envSchema.parse(process.env);

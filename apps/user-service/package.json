@@ -10,6 +10,9 @@
     "@repo/logger": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
-    "hono": "^4.12.27"
+    "@repo/validation": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.27",
+    "zod": "^4.4.3"
   }
 }

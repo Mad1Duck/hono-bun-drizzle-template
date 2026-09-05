@@ -3,6 +3,7 @@ import { describe, it, expect, mock } from "bun:test";
 process.env.JWT_SECRET = "test-secret";
 process.env.AUTH_SERVICE_URL = "http://localhost:3001";
 process.env.NOTIFICATION_SERVICE_URL = "http://localhost:3004";
+process.env.USER_SERVICE_URL = "http://localhost:3002";
 
 mock.module("ioredis", () => ({
   Redis: class MockRedis {
