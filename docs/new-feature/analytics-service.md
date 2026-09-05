@@ -130,6 +130,6 @@ Response sesuai `ApiResponse<T>` dari `packages/shared`:
 
 ## Security Notes
 
-- Siasati credentials (`strategihub` / `skdio349asewkpse`) must live in `.env` only.
+- Siasati credentials (`******username******` / `******pasword******`) must live in `.env` only.
 - Do not log `Authorization` headers or PII.
 - Cache in Redis, not in local filesystem.
