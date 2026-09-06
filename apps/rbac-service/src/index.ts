@@ -1,13 +1,14 @@
 import { app } from './app';
 import { pool } from '@repo/database';
+import { env } from './config/env';
 import { closeLogger, logger } from '@repo/logger';
-import { getEventBroker, registerGracefulShutdown } from '@repo/shared';
+import { createServer, getEventBroker, registerGracefulShutdown } from '@repo/shared';
 
 const eventBroker = getEventBroker();
 
-const port = process.env.RBAC_SERVICE_PORT ? Number(process.env.RBAC_SERVICE_PORT) : 3005;
+const port = env.RBAC_SERVICE_PORT;
 
-const server = Bun.serve({
+const server = createServer({
   port,
   fetch: app.fetch,
 });

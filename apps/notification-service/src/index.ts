@@ -1,11 +1,12 @@
 import { app } from './app';
 import { pool } from '@repo/database';
+import { env } from './config/env';
 import { closeLogger, logger } from '@repo/logger';
-import { registerGracefulShutdown } from '@repo/shared';
+import { createServer, registerGracefulShutdown } from '@repo/shared';
 
-const port = process.env.NOTIFICATION_SERVICE_PORT || 3004;
+const port = env.NOTIFICATION_SERVICE_PORT;
 
-const server = Bun.serve({
+const server = createServer({
   port,
   fetch: app.fetch,
 });

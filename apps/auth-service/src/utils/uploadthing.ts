@@ -1,5 +1,6 @@
+import { env } from '@/config/env';
 import { UTApi } from "uploadthing/server";
 
 export const utapi = new UTApi({
-  token: process.env.UPLOADTHING_SECRET
+  token: env.UPLOADTHING_SECRET
 });

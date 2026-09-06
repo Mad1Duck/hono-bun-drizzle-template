@@ -1,23 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-
-vi.mock("ioredis", () => ({
-  Redis: class MockRedis {
-    incr() { return Promise.resolve(1); }
-    expire() { return Promise.resolve(1); }
-    del() { return Promise.resolve(1); }
-    on() { return this; }
-    quit() { return Promise.resolve(undefined); }
-  },
-  default: class MockRedis {
-    incr() { return Promise.resolve(1); }
-    expire() { return Promise.resolve(1); }
-    del() { return Promise.resolve(1); }
-    on() { return this; }
-    quit() { return Promise.resolve(undefined); }
-  },
-}));
-
-const { default: app } = await import("../route/auth.route");
+import { describe, it, expect } from "vitest";
+import app from "../route/auth.route";
 
 describe("auth routes", () => {
   it("POST /login rejects empty body", async () => {

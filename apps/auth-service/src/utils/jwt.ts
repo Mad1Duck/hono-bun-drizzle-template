@@ -1,3 +1,4 @@
+import { env } from '@/config/env';
 import { decode, sign, verify, jwt } from 'hono/jwt';
 
 interface tokenParams {
@@ -8,13 +9,7 @@ interface tokenParams {
   isPlatformOwner?: boolean | null;
 }
 
-const DEFAULT_ACCESS_TTL_SECONDS = 15 * 60; // 15 minutes
-const DEFAULT_REFRESH_TTL_DAYS = 7;
-
-const getAccessTtlSeconds = () => {
-  const envValue = process.env.ACCESS_TOKEN_TTL_SECONDS;
-  return envValue ? Number(envValue) : DEFAULT_ACCESS_TTL_SECONDS;
-};
+const getAccessTtlSeconds = () => env.ACCESS_TOKEN_TTL_SECONDS;
 
 export const generateToken = async ({ email, id, roles, isPlatformOwner }: tokenParams) => {
   const now = Math.floor(Date.now() / 1000);
@@ -27,16 +22,14 @@ export const generateToken = async ({ email, id, roles, isPlatformOwner }: token
     iat: now,
     exp: now + getAccessTtlSeconds(),
   };
-  const secret = process.env.JWT_SECRET || 'default';
+  const secret = env.JWT_SECRET;
   const token = await sign(payload, secret, 'HS256');
 
   return token;
 };
 
 export const generateRefreshToken = async ({ email, national_id, id, roles, isPlatformOwner }: tokenParams) => {
-  const refreshTtlDays = process.env.REFRESH_TOKEN_TTL_DAYS
-    ? Number(process.env.REFRESH_TOKEN_TTL_DAYS)
-    : DEFAULT_REFRESH_TTL_DAYS;
+  const refreshTtlDays = env.REFRESH_TOKEN_TTL_DAYS;
   const now = Math.floor(Date.now() / 1000);
   const tmpExp = now + 60 * 60 * 24 * refreshTtlDays;
   const payload = {
@@ -49,14 +42,14 @@ export const generateRefreshToken = async ({ email, national_id, id, roles, isPl
     iat: now,
     exp: tmpExp
   };
-  const secret = process.env.JWT_SECRET || 'default';
+  const secret = env.JWT_SECRET;
   const token = await sign(payload, secret, 'HS256');
 
   return { token, tmpExp };
 };
 
 export const verifyToken = async (token: string) => {
-  const secret = process.env.JWT_SECRET || 'default';
+  const secret = env.JWT_SECRET;
   const result = await verify(token, secret, 'HS256');
 
   return result;

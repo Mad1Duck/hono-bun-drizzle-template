@@ -21,3 +21,6 @@ export * from './utils/discovery';
 export * from './utils/redis-health';
 export * from './utils/shutdown';
 export * from './utils/token-blocklist';
+export * from './server';
+export * from './websocket';
+export { z } from 'zod';

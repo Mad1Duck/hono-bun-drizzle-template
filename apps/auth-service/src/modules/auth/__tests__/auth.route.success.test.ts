@@ -1,29 +1,60 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@repo/shared", async (importOriginal) => {
-  const actual = await importOriginal() as any;
-  return {
-    ...actual,
-    checkRateLimit: async () => ({ allowed: true, remaining: 5 }),
-    resetRateLimit: async () => {},
-  };
-});
-
-vi.mock("ioredis", () => ({
-  Redis: class MockRedis {
-    incr() { return Promise.resolve(1); }
-    expire() { return Promise.resolve(1); }
-    del() { return Promise.resolve(1); }
-    on() { return this; }
-    quit() { return Promise.resolve(undefined); }
+vi.mock("@repo/shared", () => ({
+  catchAsync: (fn: any) => async (c: any, next: any) => {
+    try {
+      return await fn(c, next);
+    } catch (error: any) {
+      return c.json(
+        {
+          data: null,
+          error: {
+            code: error.code || "INTERNAL_ERROR",
+            message: error.message || "Internal Server Error",
+            fields: error.fields,
+            details: error.details,
+          },
+          meta: {
+            code: error.statusCode || 500,
+            status: "ERROR",
+            version: "v1",
+          },
+        },
+        error.statusCode || 500,
+      );
+    }
   },
-  default: class MockRedis {
-    incr() { return Promise.resolve(1); }
-    expire() { return Promise.resolve(1); }
-    del() { return Promise.resolve(1); }
-    on() { return this; }
-    quit() { return Promise.resolve(undefined); }
+  success: (c: any, data: any, options?: any) =>
+    c.json(
+      {
+        data,
+        error: null,
+        meta: {
+          code: options?.code || 200,
+          status: "SUCCESS",
+          message: options?.message || "Success",
+          version: "v1",
+        },
+      },
+      options?.code || 200,
+    ),
+  ApiError: class ApiError extends Error {
+    statusCode: number;
+    code: string;
+    fields?: Record<string, string[]>;
+    details?: unknown;
+    isOperational: boolean;
+    constructor(code: string, overrides?: any) {
+      super(code);
+      this.statusCode = overrides?.statusCode || 400;
+      this.code = code;
+      this.fields = overrides?.fields;
+      this.details = overrides?.details;
+      this.isOperational = true;
+    }
   },
+  checkRateLimit: async () => ({ allowed: true, remaining: 5 }),
+  resetRateLimit: async () => {},
 }));
 
 vi.mock("../service/auth.service", () => ({

@@ -1,10 +1,10 @@
 import { app } from './app';
 import { env } from './config/env';
 import { closeLogger, logger } from '@repo/logger';
-import { registerGracefulShutdown } from '@repo/shared';
+import { createServer, registerGracefulShutdown } from '@repo/shared';
 import { websocket } from './stream/connector/ws.connector';
 
-const server = Bun.serve({
+const server = createServer({
   port: env.PORT,
   fetch: app.fetch,
   websocket,

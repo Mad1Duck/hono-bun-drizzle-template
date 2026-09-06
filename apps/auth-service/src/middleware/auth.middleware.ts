@@ -1,7 +1,8 @@
 import { createAuthentication, catchAsync, ApiError } from "@repo/shared";
+import { env } from '@/config/env';
 import { getUserById } from "@/modules/auth/service/auth.service";
 
-export const authentication = createAuthentication(process.env.JWT_SECRET || 'default');
+export const authentication = createAuthentication(env.JWT_SECRET);
 
 export const authenticationStoreOwner = catchAsync(async (c, next) => {
   const { id } = c.get("jwtPayload") as { id: string; };

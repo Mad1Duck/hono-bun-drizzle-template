@@ -1,14 +1,15 @@
 import { app } from './app';
 import { pool } from '@repo/database';
+import { env } from './config/env';
 import { closeLogger, logger } from '@repo/logger';
-import { registerGracefulShutdown } from '@repo/shared';
+import { createServer, registerGracefulShutdown } from '@repo/shared';
 import { startUserRoleChangedConsumer } from './events/user-role-changed.consumer';
 
 const stopUserRoleChangedConsumer = startUserRoleChangedConsumer();
 
-const port = process.env.USER_SERVICE_PORT || 3002;
+const port = env.USER_SERVICE_PORT;
 
-const server = Bun.serve({
+const server = createServer({
   port,
   fetch: app.fetch,
 });

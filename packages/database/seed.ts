@@ -1,9 +1,7 @@
+import bcrypt from 'bcryptjs';
 import { db, users, userRoles, permissions, rolePermissions, credentials } from './index';
 
-const hashPassword = (password: string) => Bun.password.hash(password, {
-  algorithm: 'bcrypt',
-  cost: 4,
-});
+const hashPassword = (password: string) => bcrypt.hash(password, 4);
 
 export async function seed() {
   try {

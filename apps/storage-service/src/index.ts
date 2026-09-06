@@ -1,10 +1,11 @@
 import { app } from './app';
+import { env } from './config/env';
 import { closeLogger, logger } from '@repo/logger';
-import { registerGracefulShutdown } from '@repo/shared';
+import { createServer, registerGracefulShutdown } from '@repo/shared';
 
-const port = process.env.STORAGE_SERVICE_PORT ? Number(process.env.STORAGE_SERVICE_PORT) : 3003;
+const port = env.STORAGE_SERVICE_PORT;
 
-const server = Bun.serve({
+const server = createServer({
   port,
   fetch: app.fetch,
 });

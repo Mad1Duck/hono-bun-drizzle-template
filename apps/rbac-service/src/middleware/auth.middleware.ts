@@ -1,6 +1,7 @@
 import { createAuthentication, catchAsync, ApiError } from "@repo/shared";
+import { env } from '@/config/env';
 
-export const authentication = createAuthentication(process.env.JWT_SECRET || 'default');
+export const authentication = createAuthentication(env.JWT_SECRET);
 
 export const authenticationAdministrator = catchAsync(async (c, next) => {
   const { isPlatformOwner, roles } = c.get("jwtPayload") as {

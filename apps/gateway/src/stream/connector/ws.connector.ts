@@ -1,17 +1,23 @@
-import { ServerWebSocket } from "bun";
-import { createBunWebSocket } from "hono/bun";
-import { eventHub, encode, decode, versionedTopic } from "@repo/shared";
+import {
+  createWebSocketServer,
+  WebSocketConnection,
+  WebSocketHandler,
+  eventHub,
+  encode,
+  decode,
+  versionedTopic,
+} from "@repo/shared";
 
-const { websocket, upgradeWebSocket } = createBunWebSocket();
+const { websocket, upgradeWebSocket } = await createWebSocketServer();
 
-const clients = new Map<ServerWebSocket, Set<string>>();
+const clients = new Map<WebSocketConnection, Set<string>>();
 
 eventHub.subscribe((topic, payload) => {
   const channel = versionedTopic(topic);
   const envelope = JSON.stringify(encode(topic, payload));
-  for (const [ws, channels] of clients.entries()) {
+  for (const [connection, channels] of clients.entries()) {
     if (channels.has(channel)) {
-      ws.send(envelope);
+      connection.send(envelope);
     }
   }
 });
@@ -27,27 +33,25 @@ export const wsHandler = upgradeWebSocket((c) => {
   const channel = versionedTopic(topic);
 
   return {
-    onOpen(_, ws) {
-      const rawWs = ws.raw as ServerWebSocket;
-      if (!clients.has(rawWs)) {
-        clients.set(rawWs, new Set());
+    onOpen: (connection) => {
+      if (!clients.has(connection)) {
+        clients.set(connection, new Set());
       }
-      clients.get(rawWs)?.add(channel);
-      rawWs.subscribe(channel);
+      clients.get(connection)?.add(channel);
+      connection.subscribe(channel);
     },
-    onMessage(evt) {
-      const parsed = decode<unknown>(evt.data as string | ArrayBuffer);
+    onMessage: (connection, data) => {
+      const parsed = decode<unknown>(data as string | ArrayBuffer);
       eventHub.broadcast(parsed.topic, parsed.payload);
     },
-    onClose(_, ws) {
-      const rawWs = ws.raw as ServerWebSocket;
-      const channels = clients.get(rawWs);
+    onClose: (connection) => {
+      const channels = clients.get(connection);
       if (channels) {
         for (const subscribedChannel of channels) {
-          rawWs.unsubscribe(subscribedChannel);
+          connection.unsubscribe(subscribedChannel);
         }
       }
-      clients.delete(rawWs);
+      clients.delete(connection);
     },
-  };
+  } as WebSocketHandler;
 });

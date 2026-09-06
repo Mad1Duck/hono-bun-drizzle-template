@@ -4,14 +4,21 @@ import { logger } from '@repo/logger';
 
 const MAX_RECONNECT_ATTEMPTS = 5;
 
-const redis = new Redis({
-  ...redisConfig,
-  maxRetriesPerRequest: 1,
-  connectTimeout: 2000,
-  retryStrategy: (times) => (times > MAX_RECONNECT_ATTEMPTS ? null : 2000),
-  lazyConnect: false,
-});
-redis.on('error', (err) => logger.warn({ err }, 'Redis connection error (rate limiter)'));
+let redis: Redis | null = null;
+
+const getRedis = () => {
+  if (!redis) {
+    redis = new Redis({
+      ...redisConfig,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 2000,
+      retryStrategy: (times) => (times > MAX_RECONNECT_ATTEMPTS ? null : 2000),
+      lazyConnect: false,
+    });
+    redis.on('error', (err) => logger.warn({ err }, 'Redis connection error (rate limiter)'));
+  }
+  return redis;
+};
 
 interface RateLimitOptions {
   key: string;
@@ -24,10 +31,10 @@ export const checkRateLimit = async ({ key, limit, windowSeconds }: RateLimitOpt
   const redisKey = `rate-limit:${key}`;
 
   try {
-    const attempts = await redis.incr(redisKey);
+    const attempts = await getRedis().incr(redisKey);
 
     if (attempts === 1) {
-      await redis.expire(redisKey, windowSeconds);
+      await getRedis().expire(redisKey, windowSeconds);
     }
 
     return {
@@ -42,7 +49,7 @@ export const checkRateLimit = async ({ key, limit, windowSeconds }: RateLimitOpt
 
 export const resetRateLimit = async (key: string) => {
   try {
-    await redis.del(`rate-limit:${key}`);
+    await getRedis().del(`rate-limit:${key}`);
   } catch (err) {
     logger.warn({ err, key }, 'Failed to reset rate limit counter');
   }
