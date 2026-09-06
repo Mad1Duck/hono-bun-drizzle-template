@@ -6,6 +6,7 @@ import upload from './upload';
 import rbac from './rbac';
 import health from './health';
 import metrics from './metrics';
+import docs from './docs';
 
 const app = new Hono()
     .route('/auth', auth)
@@ -14,6 +15,7 @@ const app = new Hono()
     .route('/upload', upload)
     .route('/roles', rbac)
     .route('/permissions', rbac)
+    .route('/docs', docs)
     .route('/health', health)
     .route('/metrics', metrics);
 

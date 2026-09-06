@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { LokiStream } from '../loki';
 
 type FetchMock = typeof globalThis.fetch;

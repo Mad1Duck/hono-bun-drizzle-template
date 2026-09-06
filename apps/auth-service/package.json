@@ -12,8 +12,6 @@
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/validation": "workspace:*",
-    "@asteasolutions/zod-to-openapi": "^8.5.0",
-    "@hono/swagger-ui": "^0.6.1",
     "bullmq": "^5.79.2",
     "drizzle-orm": "^0.45.2",
     "file-type": "^22.0.1",

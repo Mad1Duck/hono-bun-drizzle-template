@@ -1,4 +1,9 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("../stream/handler", async () => {
+  const { Hono } = await import("hono");
+  return { default: new Hono() };
+});
 
 process.env.JWT_SECRET = "test-secret";
 process.env.AUTH_SERVICE_URL = "http://localhost:3001";
@@ -9,7 +14,7 @@ process.env.RBAC_SERVICE_URL = "http://localhost:3005";
 process.env.PROXY_TIMEOUT_MS = "100";
 process.env.PROXY_RETRIES = "0";
 
-mock.module("ioredis", () => ({
+vi.mock("ioredis", () => ({
   Redis: class MockRedis {
     incr() { return Promise.resolve(1); }
     expire() { return Promise.resolve(1); }

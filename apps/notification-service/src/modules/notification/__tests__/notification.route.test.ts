@@ -1,6 +1,6 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
 
-mock.module("../service/notification.service", () => ({
+vi.mock("../service/notification.service", () => ({
   createNotification: async (data: any) => ({
     id: "notif-1",
     senderId: data.senderId ?? null,

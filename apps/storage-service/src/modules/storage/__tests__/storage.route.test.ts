@@ -1,6 +1,6 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
 
-mock.module("../service/image.service", () => ({
+vi.mock("../service/image.service", () => ({
   toWebp: async () => ({
     convertedBuffer: new ArrayBuffer(0),
     mime: "image/webp",
@@ -8,7 +8,7 @@ mock.module("../service/image.service", () => ({
   }),
 }));
 
-mock.module("@/utils/uploadthing", () => ({
+vi.mock("@/utils/uploadthing", () => ({
   utapi: {
     uploadFiles: async () => ({ success: true, fileUrl: "https://example.com/file.webp" }),
   },

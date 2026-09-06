@@ -8,10 +8,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
     "hono": "^4.12.27",
     "ioredis": "^5.11.1",
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "zod": "^4.4.3"
   }
 }

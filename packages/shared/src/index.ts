@@ -12,6 +12,7 @@ export * from './stream/codec';
 export * from './stream/connector';
 export * from './stream/topicRegistry';
 export * from './stream/broker';
+export * from './openapi';
 export * from './middleware/auth';
 export * from './middleware/request-id';
 export * from './middleware/request-logger';

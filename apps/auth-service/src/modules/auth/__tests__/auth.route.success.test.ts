@@ -1,6 +1,15 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
 
-mock.module("ioredis", () => ({
+vi.mock("@repo/shared", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    checkRateLimit: async () => ({ allowed: true, remaining: 5 }),
+    resetRateLimit: async () => {},
+  };
+});
+
+vi.mock("ioredis", () => ({
   Redis: class MockRedis {
     incr() { return Promise.resolve(1); }
     expire() { return Promise.resolve(1); }
@@ -17,7 +26,7 @@ mock.module("ioredis", () => ({
   },
 }));
 
-mock.module("../service/auth.service", () => ({
+vi.mock("../service/auth.service", () => ({
   getUser: async () => ({
     id: "user-1",
     email: "user@example.com",
@@ -41,14 +50,14 @@ mock.module("../service/auth.service", () => ({
   revokeRefreshToken: async () => ({}),
 }));
 
-mock.module("../../../utils/jwt", () => ({
+vi.mock("../../../utils/jwt", () => ({
   generateToken: async () => "access-token",
   generateRefreshToken: async () => ({ token: "refresh-token", tmpExp: 1234567890 }),
   verifyToken: async (token: string) => token ? ({ id: "user-1", email: "user@example.com", roles: "USER" }) : null,
   decodeToken: async () => ({}),
 }));
 
-mock.module("../../../utils/hashing", () => ({
+vi.mock("../../../utils/hashing", () => ({
   bcryptHash: async () => "hashed",
   bcryptVerify: async () => true,
   sha256Hash: (value: string) => value,

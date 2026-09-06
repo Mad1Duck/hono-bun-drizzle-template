@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "bun --env-file=../../.env run --cwd packages/database db:generate",
     "db:migrate": "bun --env-file=../../.env run --cwd packages/database db:migrate",
     "seed": "bun --env-file=../../.env run --cwd packages/database seed"
@@ -16,7 +19,10 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "turbo": "^2.10.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^5.0.0"
   }
 }

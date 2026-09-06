@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { InMemoryEventBroker, RedpandaEventBroker, type EventBroker } from '../broker';
 import { USER_ROLE_CHANGED } from '../../constants/topics';
 import { getTopicConfig, getPartitionKey } from '../topicRegistry';
@@ -9,34 +9,34 @@ const subscribedTopics: string[] = [];
 const adminCreatedTopics: unknown[] = [];
 
 const mockProducer = {
-  connect: mock(() => Promise.resolve()),
-  send: mock((record) => {
+  connect: vi.fn(() => Promise.resolve()),
+  send: vi.fn((record) => {
     sentMessages.push(record);
     return Promise.resolve([{ topicName: record.topic, partition: 0, errorCode: 0, offset: '0', timestamp: Date.now().toString() }]);
   }),
-  disconnect: mock(() => Promise.resolve()),
+  disconnect: vi.fn(() => Promise.resolve()),
 };
 
 const mockConsumer = {
-  connect: mock(() => Promise.resolve()),
-  subscribe: mock((opts: { topics: string[] }) => {
+  connect: vi.fn(() => Promise.resolve()),
+  subscribe: vi.fn((opts: { topics: string[] }) => {
     subscribedTopics.push(...opts.topics);
     return Promise.resolve();
   }),
-  run: mock((cfg: { eachMessage: (payload: unknown) => Promise<void> }) => {
+  run: vi.fn((cfg: { eachMessage: (payload: unknown) => Promise<void> }) => {
     consumerRunHandlers.push(cfg as any);
     return Promise.resolve();
   }),
-  disconnect: mock(() => Promise.resolve()),
+  disconnect: vi.fn(() => Promise.resolve()),
 };
 
 const mockAdmin = {
-  connect: mock(() => Promise.resolve()),
-  createTopics: mock((opts) => {
+  connect: vi.fn(() => Promise.resolve()),
+  createTopics: vi.fn((opts) => {
     adminCreatedTopics.push(opts);
     return Promise.resolve(true);
   }),
-  disconnect: mock(() => Promise.resolve()),
+  disconnect: vi.fn(() => Promise.resolve()),
 };
 
 const mockKafka = {
@@ -45,7 +45,7 @@ const mockKafka = {
   admin: () => mockAdmin,
 };
 
-mock.module('kafkajs', () => ({
+vi.mock('kafkajs', () => ({
   Kafka: class {
     config: unknown;
     constructor(config: unknown) {

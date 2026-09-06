@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, vi } from "vitest";
 
 const mockUser = {
   id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
@@ -11,7 +11,7 @@ const mockUser = {
   createdAt: new Date().toISOString(),
 };
 
-mock.module("../service/user.service", () => ({
+vi.mock("../service/user.service", () => ({
   getUserById: async () => mockUser,
   updateUser: async () => ({ ...mockUser, firstName: "Updated" }),
 }));

@@ -13,5 +13,7 @@ export const requestLogger = createMiddleware<{ Variables: Variables; }>(async (
     status: c.res.status,
     ms: Date.now() - start,
     requestId: c.get('requestId'),
+    traceId: c.get('traceId'),
+    spanId: c.get('spanId'),
   }, 'request completed');
 });

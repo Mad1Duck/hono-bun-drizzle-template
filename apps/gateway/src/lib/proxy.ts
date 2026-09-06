@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { filterHeaders } from '../utils/headers';
-import { REQUEST_ID_HEADER } from '../config/constants';
+import { REQUEST_ID_HEADER, TRACE_ID_HEADER, SPAN_ID_HEADER } from '../config/constants';
 import type { Variables } from '../types/hono';
 import { env } from '../config/env';
 import { fetchWithResilience, CircuitBreaker, DistributedCircuitBreaker, type CircuitBreakerLike } from './fetch';
@@ -29,7 +29,11 @@ export const createProxy = (targetBaseUrl: string) => {
 
     const headers = filterHeaders(c.req.raw.headers);
     const requestId = c.get('requestId');
+    const traceId = c.get('traceId');
+    const spanId = c.get('spanId');
     if (requestId) headers.set(REQUEST_ID_HEADER, requestId);
+    if (traceId) headers.set(TRACE_ID_HEADER, traceId);
+    if (spanId) headers.set(SPAN_ID_HEADER, spanId);
 
     const hasBody = !['GET', 'HEAD'].includes(c.req.method);
 

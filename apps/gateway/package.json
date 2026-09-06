@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/swagger-ui": "^0.5.1",
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/shared": "workspace:*",

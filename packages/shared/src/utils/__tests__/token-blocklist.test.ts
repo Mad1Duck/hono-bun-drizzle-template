@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import ApiError from "../../apiError";
 import { getRevokedAt, revokeUserTokens } from "../token-blocklist";
 

@@ -8,6 +8,10 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "cache": false
+    },
+    "test": {
+      "dependsOn": [],
+      "cache": true
     }
   }
 }

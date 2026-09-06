@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, beforeEach } from "bun:test";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const store = new Map<string, string>();
 
@@ -30,7 +30,7 @@ class Pipeline {
   }
 }
 
-mock.module("ioredis", () => ({
+vi.mock("ioredis", () => ({
   Redis: class MockRedis {
     on() {
       return this;

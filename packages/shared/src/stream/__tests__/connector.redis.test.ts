@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, beforeEach } from "bun:test";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 type Listener = (pattern: string, channel: string, message: string) => void;
 
@@ -6,7 +6,7 @@ let pmessageListener: Listener | null = null;
 const published: { channel: string; message: string }[] = [];
 const psubscribed: string[] = [];
 
-mock.module("ioredis", () => ({
+vi.mock("ioredis", () => ({
   Redis: class MockRedis {
     status = 'ready';
     on(event: string, cb: Listener) {
